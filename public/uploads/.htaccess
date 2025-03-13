@@ -1,0 +1,52 @@
+# Denegar acceso directo a esta carpeta
+Options -Indexes
+
+# Denegar acceso a archivos PHP en este directorio
+<FilesMatch "\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Denegar acceso a archivos .htaccess
+<Files .htaccess>
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Permitir solo acceso a archivos PDF
+<FilesMatch "\.(?i:pdf)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Evitar ejecución de scripts en archivos subidos
+<FilesMatch "\.(?i:pht|php|htaccess|htpasswd|ini|phps|fla|psd|log|sh|cgi|pl|py|jsp|asp|aspx|rb|coffee|swf|exe|dll)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Restringir métodos HTTP
+<LimitExcept GET HEAD>
+    Order deny,allow
+    Deny from all
+</LimitExcept>
+
+# Añadir encabezados de seguridad adicionales
+<IfModule mod_headers.c>
+    # Evitar que el navegador detecte automáticamente el tipo MIME
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Restringir carga de PDFs en iframes a mismo origen
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Habilitar protección XSS en navegadores antiguos 
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Permitir solo acceso desde el mismo sitio
+    Header set Content-Security-Policy "default-src 'self'"
+</IfModule>
+
+# Establecer tipo MIME para PDFs
+<IfModule mod_mime.c>
+    AddType application/pdf .pdf
+</IfModule>

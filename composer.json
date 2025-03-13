@@ -1,0 +1,26 @@
+{
+    "name": "mi-proyecto/pdf-to-excel",
+    "description": "Aplicación para extraer datos de PDFs, procesar OCR y exportar a Excel",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "tecnickcom/tcpdf": "^6.5",
+        "setasign/fpdi": "^2.3",
+        "phpoffice/phpspreadsheet": "^4.1",
+        "thiagoalessio/tesseract_ocr": "^2.12",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Core\\": "core/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Tu Nombre",
+            "email": "tuemail@example.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
