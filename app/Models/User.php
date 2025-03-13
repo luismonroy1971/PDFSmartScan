@@ -13,7 +13,13 @@ class User {
     public function findByEmail($email) {
         $sql = "SELECT * FROM users WHERE email = :email LIMIT 1";
         $stmt = $this->db->query($sql, ['email' => $email]);
-        return $stmt->fetch();
+        
+        // Verificar si se encontró algún resultado
+        if ($stmt->rowCount() > 0) {
+            return $stmt->fetch();
+        }
+        
+        return false;
     }
     
     public function findById($id) {

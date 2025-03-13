@@ -34,8 +34,22 @@ class AuthController {
         // Verificar si el usuario existe
         $user = $this->userModel->findByEmail($data['email']);
         
-        if (!$user || !password_verify($data['password'], $user['password'])) {
-            Session::setFlash('error', 'Email o contraseña incorrectos');
+        // Agregar registro para depuración
+        error_log("Intento de login para email: " . $data['email'] . " - Usuario encontrado: " . ($user ? 'SÍ' : 'NO'));
+        
+        if (!$user) {
+            Session::setFlash('error', 'El usuario no existe o las credenciales son incorrectas');
+            return Response::redirect('/login');
+        }
+        
+        // Verificar la contraseña 
+        $passwordValid = password_verify($data['password'], $user['password']);
+        
+        // Agregar registro para depuración
+        error_log("Verificación de contraseña para " . $data['email'] . " - Resultado: " . ($passwordValid ? 'VÁLIDO' : 'INVÁLIDO'));
+        
+        if (!$passwordValid) {
+            Session::setFlash('error', 'El usuario no existe o las credenciales son incorrectas');
             return Response::redirect('/login');
         }
         
