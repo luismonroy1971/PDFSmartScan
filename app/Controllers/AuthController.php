@@ -5,6 +5,7 @@ use App\Models\User;
 use Core\Session;
 use Core\Request;
 use Core\Response;
+use function Core\view;
 
 class AuthController {
     private $userModel;

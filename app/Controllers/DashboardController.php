@@ -5,6 +5,7 @@ use App\Models\Document;
 use Core\Session;
 use Core\Request;
 use Core\Response;
+use function Core\view;
 
 class DashboardController {
     private $documentModel;
