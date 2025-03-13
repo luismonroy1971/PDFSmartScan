@@ -16,6 +16,9 @@ define('UPLOAD_PATH', BASE_PATH . '/public/uploads');
 // Cargar Composer autoloader
 require_once BASE_PATH . '/vendor/autoload.php';
 
+// Cargar helpers
+require_once CORE_PATH . '/helpers.php';
+
 // Cargar variables de entorno
 $dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
 $dotenv->load();
@@ -35,7 +38,7 @@ use Core\Router;
 use Core\Request;
 use Core\Response;
 use Core\Session;
-use Core\Helpers;
+
 
 // Cargar configuración de la aplicación
 $config = require_once CORE_PATH . '/Config.php';
@@ -85,33 +88,3 @@ $response = new Response();
 
 // Ejecutar la aplicación
 $app->run($router, $request, $response);
-
-/**
- * Función auxiliar para renderizar vistas
- * 
- * @param string $view Ruta a la vista
- * @param array $data Datos para pasar a la vista
- * @return string HTML renderizado
- */
-function view($view, $data = []) {
-    // Extraer variables para usar en la vista
-    extract($data);
-    
-    // Incluir la vista
-    $viewPath = VIEWS_PATH . '/' . $view . '.php';
-    
-    if (!file_exists($viewPath)) {
-        throw new Exception("Vista no encontrada: {$view}");
-    }
-    
-    // Iniciar buffer de salida
-    ob_start();
-    
-    // Incluir la vista
-    include $viewPath;
-    
-    // Obtener el contenido del buffer y limpiarlo
-    $content = ob_get_clean();
-    
-    return $content;
-}

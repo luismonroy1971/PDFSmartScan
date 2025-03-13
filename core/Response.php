@@ -159,17 +159,19 @@ class Response {
      * @param mixed $data Datos a convertir a JSON
      * @param int $statusCode Código de estado
      * @param array $headers Cabeceras adicionales
-     * @return $this
+     * @return Response
      */
-    public function json($data, $statusCode = 200, array $headers = []) {
-        $this->setHeader('Content-Type', 'application/json');
-        $this->setStatusCode($statusCode);
-        $this->setHeaders($headers);
-        $this->setContent(json_encode($data));
+    public static function json($data, $statusCode = 200, array $headers = []) {
+        $response = new self();
+        $response->setHeader('Content-Type', 'application/json');
+        $response->setStatusCode($statusCode);
+        $response->setHeaders($headers);
+        $response->setContent(json_encode($data));
         
-        return $this;
+        // Enviar la respuesta directamente
+        $response->send();
+        exit;
     }
-    
     /**
      * Envía la respuesta al cliente
      * 

@@ -6,6 +6,7 @@ use App\Models\DocumentArea;
 use Core\Session;
 use Core\Request;
 use Core\Response;
+use function Core\view;
 
 class PdfController {
     private $documentModel;

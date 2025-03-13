@@ -1,5 +1,7 @@
-<?php include_once VIEWS_PATH . '/layouts/header.php'; ?>
-
+<?php 
+use Core\Session;
+include_once VIEWS_PATH . '/layouts/header.php'; 
+?>
 <div class="container-fluid mt-4">
     <div class="row">
         <!-- Main Content -->

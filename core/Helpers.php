@@ -30,3 +30,24 @@ function view($view, $data = []) {
     
     return $content;
 }
+
+/**
+ * Proxy para Session::hasFlash
+ */
+function has_flash($key) {
+    return \Core\Session::hasFlash($key);
+}
+
+/**
+ * Proxy para Session::getFlash
+ */
+function flash($key, $default = null) {
+    return \Core\Session::getFlash($key);
+}
+
+/**
+ * Proxy para Session::get
+ */
+function session($key, $default = null) {
+    return \Core\Session::get($key, $default);
+}

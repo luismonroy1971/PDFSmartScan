@@ -10,6 +10,8 @@ use App\Controllers\OcrController;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use function Core\view;
 
 class ExcelController {
     private $documentModel;
@@ -105,7 +107,10 @@ class ExcelController {
             // Añadir encabezados
             $col = 1;
             foreach ($areas as $area) {
-                $sheet->setCellValueByColumnAndRow($col++, 1, $area['column_name']);
+                // Usar la notación de coordenadas para especificar la celda
+                $cellCoord = Coordinate::stringFromColumnIndex($col) . '1';
+                $sheet->setCellValue($cellCoord, $area['column_name']);
+                $col++;
             }
             
             // Añadir datos
@@ -119,7 +124,10 @@ class ExcelController {
             
             $col = 1;
             foreach ($dataRow as $value) {
-                $sheet->setCellValueByColumnAndRow($col++, $row, $value);
+                // Usar la notación de coordenadas para especificar la celda
+                $cellCoord = Coordinate::stringFromColumnIndex($col) . $row;
+                $sheet->setCellValue($cellCoord, $value);
+                $col++;
             }
             
             // Guardar el archivo
