@@ -1,6 +1,8 @@
 <?php
 namespace Core;
 
+use function Core\getParameterClassName;
+
 class Router {
     /**
      * Rutas registradas
@@ -183,8 +185,11 @@ class Router {
             $reflection = new \ReflectionMethod($controllerInstance, $method);
             $parameters = $reflection->getParameters();
             
-            if (!empty($parameters) && $parameters[0]->getClass() && $parameters[0]->getClass()->name === 'Core\\Request') {
-                array_unshift($params, $request);
+            if (!empty($parameters)) {
+                $className = getParameterClassName($parameters[0]);
+                if ($className === 'Core\\Request') {
+                    array_unshift($params, $request);
+                }
             }
             
             return call_user_func_array([$controllerInstance, $method], $params);
