@@ -1,4 +1,4 @@
-<?php use Core\Session; ?>
+<?php use App\Core\Session; ?>
 <!-- Elimino cualquier estilo o layout heredado -->
 <?php $layout = false; ?>
 
@@ -174,16 +174,28 @@
                 </div>
             <?php endif; ?>
             
+         
             <form action="/login" method="POST">
                 <div class="mb-3">
                     <label for="email" class="form-label">Usuario</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        placeholder="nombre@temalitoclean.pe">
                 </div>
                 
                 <div class="mb-3">
                     <label for="password" class="form-label">Contraseña</label>
                     <div class="password-field">
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="password" 
+                            name="password" 
+                            required>
                         <span class="password-toggle" id="togglePassword">
                             <i class="fas fa-eye"></i>
                         </span>

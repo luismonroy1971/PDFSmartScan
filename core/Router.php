@@ -80,10 +80,10 @@ class Router {
         
         // Reemplazar parámetros con patrones
         foreach ($this->patterns as $param => $regex) {
-            $pattern = str_replace(preg_quote($param), $regex, $pattern);
+            $pattern = str_replace(preg_quote($param, '/'), $regex, $pattern);
         }
         
-        return '/^' . str_replace('/', '\/', $pattern) . '$/';
+        return '/^' . $pattern . '$/';
     }
     
     /**

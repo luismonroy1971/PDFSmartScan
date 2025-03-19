@@ -4,7 +4,7 @@ return [
     "driver" => "mysql",
     "host" => "127.0.0.1",
     "port" => "3306",
-    "database" => "pdfsmartScan",
+    "database" => "pdf_extract",
     "username" => "root",
     "password" => "",
     "charset" => "utf8mb4",

@@ -5,10 +5,10 @@ namespace App\Models;
 use App\Core\Database;
 use PDO;
 
-class DocumentArea
+class TemplateArea
 {
     public $id;
-    public $document_id;
+    public $template_id;
     public $column_name;
     public $x_pos;
     public $y_pos;
@@ -19,7 +19,7 @@ class DocumentArea
     public $updated_at;
     
     /**
-     * Guarda un área de documento nueva o actualiza una existente
+     * Guarda un área de plantilla nueva o actualiza una existente
      */
     public function save()
     {
@@ -27,7 +27,7 @@ class DocumentArea
         
         // Preparar datos
         $data = [
-            'document_id' => $this->document_id,
+            'template_id' => $this->template_id,
             'column_name' => $this->column_name,
             'x_pos' => $this->x_pos,
             'y_pos' => $this->y_pos,
@@ -41,8 +41,8 @@ class DocumentArea
             $data['id'] = $this->id;
             $data['updated_at'] = date('Y-m-d H:i:s');
             
-            $sql = "UPDATE document_areas SET 
-                    document_id = :document_id,
+            $sql = "UPDATE template_areas SET 
+                    template_id = :template_id,
                     column_name = :column_name,
                     x_pos = :x_pos,
                     y_pos = :y_pos,
@@ -56,10 +56,10 @@ class DocumentArea
             $data['created_at'] = date('Y-m-d H:i:s');
             $data['updated_at'] = $data['created_at'];
             
-            $sql = "INSERT INTO document_areas 
-                    (document_id, column_name, x_pos, y_pos, width, height, page_number, created_at, updated_at) 
+            $sql = "INSERT INTO template_areas 
+                    (template_id, column_name, x_pos, y_pos, width, height, page_number, created_at, updated_at) 
                     VALUES 
-                    (:document_id, :column_name, :x_pos, :y_pos, :width, :height, :page_number, :created_at, :updated_at)";
+                    (:template_id, :column_name, :x_pos, :y_pos, :width, :height, :page_number, :created_at, :updated_at)";
         }
         
         try {
@@ -72,13 +72,13 @@ class DocumentArea
             
             return $result;
         } catch (\PDOException $e) {
-            error_log("Error al guardar área de documento: " . $e->getMessage());
+            error_log("Error al guardar área de plantilla: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Elimina un área de documento
+     * Elimina un área de plantilla
      */
     public function delete()
     {
@@ -89,10 +89,10 @@ class DocumentArea
         $db = Database::getInstance();
         
         try {
-            $stmt = $db->prepare("DELETE FROM document_areas WHERE id = :id");
+            $stmt = $db->prepare("DELETE FROM template_areas WHERE id = :id");
             return $stmt->execute(['id' => $this->id]);
         } catch (\PDOException $e) {
-            error_log("Error al eliminar área de documento: " . $e->getMessage());
+            error_log("Error al eliminar área de plantilla: " . $e->getMessage());
             return false;
         }
     }
@@ -105,7 +105,7 @@ class DocumentArea
         $db = Database::getInstance();
         
         try {
-            $stmt = $db->prepare("SELECT * FROM document_areas WHERE id = :id");
+            $stmt = $db->prepare("SELECT * FROM template_areas WHERE id = :id");
             $stmt->execute(['id' => $id]);
             
             if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -114,21 +114,21 @@ class DocumentArea
             
             return null;
         } catch (\PDOException $e) {
-            error_log("Error al buscar área de documento: " . $e->getMessage());
+            error_log("Error al buscar área de plantilla: " . $e->getMessage());
             return null;
         }
     }
     
     /**
-     * Busca áreas por ID de documento
+     * Busca áreas por ID de plantilla
      */
-    public static function findByDocumentId($documentId)
+    public static function findByTemplateId($templateId)
     {
         $db = Database::getInstance();
         
         try {
-            $stmt = $db->prepare("SELECT * FROM document_areas WHERE document_id = :document_id ORDER BY id ASC");
-            $stmt->execute(['document_id' => $documentId]);
+            $stmt = $db->prepare("SELECT * FROM template_areas WHERE template_id = :template_id ORDER BY id ASC");
+            $stmt->execute(['template_id' => $templateId]);
             
             $areas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -137,64 +137,44 @@ class DocumentArea
             
             return $areas;
         } catch (\PDOException $e) {
-            error_log("Error al buscar áreas por documento: " . $e->getMessage());
+            error_log("Error al buscar áreas por plantilla: " . $e->getMessage());
             return [];
         }
     }
     
     /**
-     * Busca un área por documento y nombre de columna
+     * Elimina todas las áreas de una plantilla
      */
-    public static function findByDocumentAndColumn($documentId, $columnName)
+    public static function deleteByTemplateId($templateId)
     {
         $db = Database::getInstance();
         
         try {
-            $stmt = $db->prepare("SELECT * FROM document_areas WHERE document_id = :document_id AND column_name = :column_name");
-            $stmt->execute([
-                'document_id' => $documentId,
-                'column_name' => $columnName
-            ]);
-            
-            if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                return self::createFromArray($row);
-            }
-            
-            return null;
+            $stmt = $db->prepare("DELETE FROM template_areas WHERE template_id = :template_id");
+            return $stmt->execute(['template_id' => $templateId]);
         } catch (\PDOException $e) {
-            error_log("Error al buscar área por documento y columna: " . $e->getMessage());
-            return null;
-        }
-    }
-    
-    /**
-     * Elimina todas las áreas de un documento
-     */
-    public static function deleteByDocumentId($documentId)
-    {
-        $db = Database::getInstance();
-        
-        try {
-            $stmt = $db->prepare("DELETE FROM document_areas WHERE document_id = :document_id");
-            return $stmt->execute(['document_id' => $documentId]);
-        } catch (\PDOException $e) {
-            error_log("Error al eliminar áreas por documento: " . $e->getMessage());
+            error_log("Error al eliminar áreas por plantilla: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Crea una instancia de DocumentArea a partir de un array
+     * Crea una instancia de TemplateArea a partir de un array
      */
     private static function createFromArray($data)
     {
         $area = new self();
         $area->id = $data['id'];
-        $area->document_id = $data['document_id'];
+        $area->template_id = $data['template_id'];
         $area->column_name = $data['column_name'];
         $area->x_pos = $data['x_pos'];
         $area->y_pos = $data['y_pos'];
         $area->width = $data['width'];
         $area->height = $data['height'];
         $area->page_number = $data['page_number'];
-        $area->created_at = $data['created_at
+        $area->created_at = $data['created_at'];
+        $area->updated_at = $data['updated_at'];
+        
+        return $area;
+    }
+}

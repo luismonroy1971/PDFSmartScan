@@ -1,269 +1,244 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\Document;
 use App\Models\DocumentArea;
-use Core\Session;
-use Core\Request;
-use Core\Response;
-use thiagoalessio\TesseractOCR\TesseractOCR;
-use setasign\Fpdi\Fpdi;
-use setasign\Fpdi\PdfReader;
+use App\Core\Session;
+use App\Core\Response;
+use App\Services\OcrService;
+use App\Services\ExcelService;
 
-class OcrController {
-    private $documentModel;
-    private $documentAreaModel;
+class OcrController extends BaseController
+{
+    protected $ocrService;
+    protected $excelService;
     
-    public function __construct() {
-        $this->documentModel = new Document();
-        $this->documentAreaModel = new DocumentArea();
-        
-        // Verificar si el usuario está autenticado
-        if (!Session::get('user_id')) {
-            Response::redirect('/login');
-        }
+    public function __construct()
+    {
+        parent::__construct();
+        $this->ocrService = new OcrService();
+        $this->excelService = new ExcelService();
     }
     
-    public function process(Request $request) {
-        $data = $request->getBody();
+    /**
+     * Muestra la página de procesamiento OCR
+     */
+    public function showProcess($documentId)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($documentId);
         
-        if (empty($data['document_id'])) {
-            return Response::json(['success' => false, 'message' => 'ID de documento no proporcionado']);
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            Session::flash('error', 'Documento no encontrado o no tiene permisos para acceder.');
+            return $this->redirect('/documents');
         }
         
-        $documentId = $data['document_id'];
-        $document = $this->documentModel->findById($documentId);
-        
-        if (!$document || $document['user_id'] != Session::get('user_id')) {
-            return Response::json(['success' => false, 'message' => 'Documento no encontrado']);
-        }
-        
-        $areas = $this->documentAreaModel->findByDocumentId($documentId);
+        // Obtener áreas seleccionadas para este documento
+        $areas = DocumentArea::findAllByDocument($documentId);
         
         if (empty($areas)) {
-            return Response::json(['success' => false, 'message' => 'No hay áreas definidas para este documento']);
+            Session::flash('error', 'No hay áreas seleccionadas para procesar. Por favor, seleccione al menos un área.');
+            return $this->redirect('/documents/view/' . $documentId);
         }
         
-        $pdfPath = $document['file_path'];
-        $results = [];
+        return $this->view('ocr/process', [
+            'document' => $document,
+            'areas' => $areas
+        ]);
+    }
+    
+    /**
+     * Procesa el OCR para un documento
+     */
+    public function process($documentId)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($documentId);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Documento no encontrado o no tiene permisos para acceder.'
+            ]);
+        }
+        
+        // Obtener áreas seleccionadas
+        $areas = DocumentArea::findAllByDocument($documentId);
+        
+        if (empty($areas)) {
+            return Response::json([
+                'success' => false,
+                'message' => 'No hay áreas seleccionadas para procesar.'
+            ]);
+        }
+        
+        // Configurar opciones de OCR
+        $options = [
+            'language' => $_POST['language'] ?? 'spa',
+            'mode' => $_POST['mode'] ?? 'auto',
+            'optimize' => isset($_POST['optimize']) && $_POST['optimize'] === '1'
+        ];
         
         try {
-            // Procesar cada área definida
+            // Procesar OCR para cada área
+            $results = [];
+            $pdfPath = PUBLIC_PATH . '/' . $document->file_path;
+            
             foreach ($areas as $area) {
-                // Extraer la imagen del área del PDF
-                $imagePath = $this->extractAreaImage($pdfPath, $area);
-                
-                if (!$imagePath) {
-                    $results[$area['column_name']] = 'Error al extraer imagen';
-                    continue;
-                }
-                
-                // Aplicar filtros para mejorar el reconocimiento
-                $filteredImagePath = $this->applyImageFilters($imagePath);
-                
-                // Procesar OCR en la imagen
-                $text = $this->processOCR($filteredImagePath);
-                
-                // Guardar el texto reconocido
-                $results[$area['column_name']] = trim($text);
-                
-                // Eliminar imágenes temporales
-                if (file_exists($imagePath)) {
-                    unlink($imagePath);
-                }
-                
-                if (file_exists($filteredImagePath) && $filteredImagePath !== $imagePath) {
-                    unlink($filteredImagePath);
-                }
+                $text = $this->ocrService->processArea($pdfPath, $area, $options);
+                $results[$area->id] = [
+                    'column_name' => $area->column_name,
+                    'text' => $text,
+                    'page' => $area->page_number,
+                    'coordinates' => [
+                        'x' => $area->x_pos,
+                        'y' => $area->y_pos,
+                        'width' => $area->width,
+                        'height' => $area->height
+                    ]
+                ];
             }
             
-            return Response::json([
-                'success' => true, 
-                'results' => $results,
-                'message' => 'Procesamiento OCR completado'
-            ]);
+            // Guardar resultados en sesión para exportación
+            Session::set('ocr_results_' . $documentId, $results);
             
+            return Response::json([
+                'success' => true,
+                'message' => 'Procesamiento OCR completado correctamente.',
+                'results' => $results
+            ]);
         } catch (\Exception $e) {
             return Response::json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Error al procesar OCR: ' . $e->getMessage()
             ]);
         }
     }
     
     /**
-     * Extrae una imagen de un área específica de un PDF
-     * 
-     * @param string $pdfPath Ruta al archivo PDF
-     * @param array $area Información del área a extraer
-     * @return string|false Ruta a la imagen extraída o false en caso de error
+     * Exporta los resultados OCR a Excel
      */
-    private function extractAreaImage($pdfPath, $area) {
-        $tempDir = sys_get_temp_dir();
-        $outputImagePath = $tempDir . '/pdf_area_' . uniqid() . '.png';
+    public function exportExcel($documentId)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($documentId);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            Session::flash('error', 'Documento no encontrado o no tiene permisos para acceder.');
+            return $this->redirect('/documents');
+        }
+        
+        // Obtener resultados de OCR de la sesión
+        $results = Session::get('ocr_results_' . $documentId);
+        
+        if (empty($results)) {
+            Session::flash('error', 'No hay resultados de OCR disponibles. Por favor, procese el documento primero.');
+            return $this->redirect('/ocr/process/' . $documentId);
+        }
+        
+        // Configurar opciones de exportación
+        $options = [
+            'format' => $_GET['format'] ?? 'xlsx',
+            'filename' => $_GET['filename'] ?? 'datos_extraidos_' . date('Y-m-d'),
+            'sheet_name' => $_GET['sheet_name'] ?? 'Datos Extraídos'
+        ];
         
         try {
-            // Usar FPDI para extraer la página específica
-            $pdf = new Fpdi();
-            $pageCount = $pdf->setSourceFile($pdfPath);
+            // Generar archivo Excel
+            $excelFile = $this->excelService->generateExcel($results, $options);
             
-            // Verificar que el número de página sea válido
-            $pageNumber = $area['page_number'];
-            if ($pageNumber > $pageCount) {
-                return false;
-            }
+            // Determinar tipo MIME según formato
+            $mimeType = ($options['format'] == 'csv') 
+                ? 'text/csv' 
+                : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             
-            // Importar la página
-            $templateId = $pdf->importPage($pageNumber);
-            $specs = $pdf->getTemplateSize($templateId);
-            $pdf->AddPage();
+            // Configurar cabeceras para descarga
+            header('Content-Type: ' . $mimeType);
+            header('Content-Disposition: attachment;filename="' . $options['filename'] . '.' . $options['format'] . '"');
+            header('Cache-Control: max-age=0');
             
-            // Calcular dimensiones originales de la página
-            $pageWidth = $specs['width'];
-            $pageHeight = $specs['height'];
+            // Enviar archivo al navegador
+            readfile($excelFile);
             
-            // Usar ghostscript para convertir la página a imagen
-            $pageImagePath = $tempDir . '/pdf_page_' . uniqid() . '.png';
-            $resolution = 300; // DPI para mejor calidad de OCR
+            // Eliminar archivo temporal
+            unlink($excelFile);
             
-            $cmd = "gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r{$resolution} " .
-                   "-dFirstPage={$pageNumber} -dLastPage={$pageNumber} " .
-                   "-sOutputFile={$pageImagePath} {$pdfPath} 2>&1";
-            
-            exec($cmd, $output, $returnCode);
-            
-            if ($returnCode !== 0 || !file_exists($pageImagePath)) {
-                return false;
-            }
-            
-            // Ahora recortar el área específica usando GD
-            $image = imagecreatefrompng($pageImagePath);
-            
-            // Convertir coordenadas del área a píxeles según la resolución
-            $factor = $resolution / 72; // Convertir de puntos PDF a píxeles
-            $x = round($area['x_pos'] * $factor);
-            $y = round($area['y_pos'] * $factor);
-            $width = round($area['width'] * $factor);
-            $height = round($area['height'] * $factor);
-            
-            // Recortar la imagen
-            $croppedImage = imagecrop($image, [
-                'x' => $x,
-                'y' => $y,
-                'width' => $width,
-                'height' => $height
-            ]);
-            
-            // Guardar la imagen recortada
-            imagepng($croppedImage, $outputImagePath);
-            
-            // Liberar recursos
-            imagedestroy($image);
-            imagedestroy($croppedImage);
-            
-            // Eliminar la imagen temporal de la página completa
-            if (file_exists($pageImagePath)) {
-                unlink($pageImagePath);
-            }
-            
-            return $outputImagePath;
-            
+            exit;
         } catch (\Exception $e) {
-            // En caso de error, asegurarse de eliminar cualquier archivo temporal
-            if (file_exists($outputImagePath)) {
-                unlink($outputImagePath);
-            }
-            
-            error_log('Error al extraer imagen del PDF: ' . $e->getMessage());
-            return false;
+            Session::flash('error', 'Error al generar el archivo Excel: ' . $e->getMessage());
+            return $this->redirect('/ocr/process/' . $documentId);
         }
     }
     
     /**
-     * Aplica filtros para mejorar la calidad de la imagen para OCR
-     * 
-     * @param string $imagePath Ruta a la imagen original
-     * @return string Ruta a la imagen procesada
+     * Muestra la página de configuración de OCR
      */
-    private function applyImageFilters($imagePath) {
-        $outputPath = sys_get_temp_dir() . '/filtered_' . basename($imagePath);
-        
-        try {
-            // Cargar la imagen
-            $image = imagecreatefrompng($imagePath);
-            
-            // Convertir a escala de grises
-            imagefilter($image, IMG_FILTER_GRAYSCALE);
-            
-            // Aumentar el contraste
-            imagefilter($image, IMG_FILTER_CONTRAST, -20);
-            
-            // Eliminar ruido (suavizado)
-            $matrix = [
-                [1, 1, 1],
-                [1, 1, 1],
-                [1, 1, 1]
-            ];
-            // Aplicar filtro de convolución para suavizar
-            imageconvolution($image, $matrix, 9, 0);
-            
-            // Umbral (threshold) para binarizar la imagen
-            // Este bucle simula un filtro de umbral
-            $threshold = 145;
-            for ($x = 0; $x < imagesx($image); $x++) {
-                for ($y = 0; $y < imagesy($image); $y++) {
-                    $color = imagecolorat($image, $x, $y);
-                    $gray = ($color >> 16) & 0xFF; // Obtener componente rojo (en escala de grises todos son iguales)
-                    
-                    if ($gray > $threshold) {
-                        imagesetpixel($image, $x, $y, 0xFFFFFF); // Blanco
-                    } else {
-                        imagesetpixel($image, $x, $y, 0x000000); // Negro
-                    }
-                }
-            }
-            
-            // Guardar la imagen procesada
-            imagepng($image, $outputPath);
-            
-            // Liberar recursos
-            imagedestroy($image);
-            
-            return $outputPath;
-            
-        } catch (\Exception $e) {
-            error_log('Error al aplicar filtros a la imagen: ' . $e->getMessage());
-            return $imagePath; // Devolver la ruta original en caso de error
+    public function showSettings()
+    {
+        // Verificar si el usuario es administrador
+        if (Session::get('user_role') !== 'admin') {
+            Session::flash('error', 'No tiene permisos para acceder a esta página.');
+            return $this->redirect('/dashboard');
         }
+        
+        // Obtener configuración actual
+        $settings = [
+            'languages' => $this->ocrService->getAvailableLanguages(),
+            'current_language' => $this->ocrService->getDefaultLanguage(),
+            'optimization_level' => $this->ocrService->getOptimizationLevel(),
+            'tesseract_path' => $this->ocrService->getTesseractPath(),
+            'ghostscript_path' => $this->ocrService->getGhostscriptPath()
+        ];
+        
+        return $this->view('ocr/settings', [
+            'settings' => $settings
+        ]);
     }
     
     /**
-     * Procesa OCR en una imagen
-     * 
-     * @param string $imagePath Ruta a la imagen a procesar
-     * @return string Texto reconocido
+     * Guarda la configuración de OCR
      */
-    private function processOCR($imagePath) {
-        try {
-            // Configurar Tesseract OCR
-            $ocr = new TesseractOCR($imagePath);
-            
-            // Configurar para reconocer escritura manuscrita
-            $ocr->configFile('tessdata/configs/hocr');
-            
-            // Admitir múltiples idiomas
-            $ocr->lang('spa', 'eng');
-            
-            // Permitir reconocimiento de dígitos y letras
-            $ocr->oem(1); // LSTM mode
-            $ocr->psm(6); // Assume single block of text
-            
-            // Ejecutar OCR y obtener texto
-            return $ocr->run();
-            
-        } catch (\Exception $e) {
-            error_log('Error al ejecutar OCR: ' . $e->getMessage());
-            return 'Error: ' . $e->getMessage();
+    public function saveSettings()
+    {
+        // Verificar si el usuario es administrador
+        if (Session::get('user_role') !== 'admin') {
+            Session::flash('error', 'No tiene permisos para acceder a esta funcionalidad.');
+            return $this->redirect('/dashboard');
         }
+        
+        // Validar datos de entrada
+        $validator = new Validator($_POST);
+        $validator->required(['default_language', 'optimization_level']);
+        
+        if (!$validator->isValid()) {
+            Session::flash('error', 'Por favor, complete todos los campos correctamente.');
+            Session::flash('errors', $validator->getErrors());
+            Session::flash('old', $_POST);
+            return $this->redirect('/ocr/settings');
+        }
+        
+        try {
+            // Actualizar configuración
+            $this->ocrService->setDefaultLanguage($_POST['default_language']);
+            $this->ocrService->setOptimizationLevel($_POST['optimization_level']);
+            
+            if (!empty($_POST['tesseract_path'])) {
+                $this->ocrService->setTesseractPath($_POST['tesseract_path']);
+            }
+            
+            if (!empty($_POST['ghostscript_path'])) {
+                $this->ocrService->setGhostscriptPath($_POST['ghostscript_path']);
+            }
+            
+            Session::flash('success', 'Configuración de OCR actualizada correctamente.');
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al guardar la configuración: ' . $e->getMessage());
+        }
+        
+        return $this->redirect('/ocr/settings');
     }
 }

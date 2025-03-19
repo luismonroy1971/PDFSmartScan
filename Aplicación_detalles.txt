@@ -1,0 +1,929 @@
+Sistema de Extracción de Datos PDF a Excel con OCR
+Desarrollado por:  
+La Gerencia de Gestión de Proyectos e Innovación de Tema Litoclean
+El Sistema de Extracción de Datos PDF a Excel con OCR representa una solución tecnológica innovadora, desarrollada íntegramente por la Gerencia de Gestión de Proyectos e Innovación de Tema Litoclean. Esta herramienta de vanguardia ha sido diseñada para responder a las necesidades específicas de estructuración y procesamiento de información documental generada en los diversos proyectos y áreas administrativas del Grupo Tema Litoclean.
+En el contexto de una organización con más de 30 años de trayectoria en consultoría ambiental y de seguridad, este sistema se alinea con nuestros valores fundamentales: eficacia en el desempeño, capacidad de respuesta hacia nuestros clientes y compromiso con el medio ambiente y la sostenibilidad.
+La plataforma permite transformar datos contenidos en documentos PDF, incluidos aquellos con texto manuscrito, en información estructurada y accionable en formato Excel. Esta capacidad resulta particularmente valiosa para la gestión documental en las diferentes áreas de nuestra organización:
+•	Historia del Grupo: Digitalización y estructuración de documentos históricos
+•	Organigrama: Procesamiento eficiente de información organizacional
+•	Calidad y Medio Ambiente: Extracción de datos de informes y certificaciones
+•	Equipo Humano: Gestión optimizada de documentación de personal
+•	I+D+i: Análisis y estructuración de datos de investigación
+•	Valores: Documentación y seguimiento de indicadores de desempeño
+Con sede en Lima, Perú (Gálvez Barrenechea 566), el Grupo TEMA LITOCLEAN mantiene su compromiso con la innovación tecnológica como pilar fundamental para mejorar continuamente nuestros procesos internos y la calidad de servicio que ofrecemos a nuestros clientes.
+Este sistema representa no solo una herramienta tecnológica avanzada, sino también un reflejo de nuestra filosofía de mejora continua y adaptación a las necesidades cambiantes del mercado, permitiéndonos mantener el liderazgo en nuestros ámbitos de actuación en consultoría ambiental, descontaminación y remediación de suelos, asesorías en seguridad industrial y gestión de indicadores de seguridad en el transporte.
+
+ 
+
+1. Introducción
+1.1 Propósito del Sistema
+El Sistema de Extracción de Datos PDF a Excel con OCR es una aplicación web robusta diseñada para automatizar y simplificar el proceso de extracción de información de documentos PDF, con especial énfasis en el reconocimiento de textos manuscritos mediante tecnología OCR (Reconocimiento Óptico de Caracteres). El propósito principal es permitir a los usuarios seleccionar áreas específicas dentro de documentos PDF y extraer su contenido de manera estructurada para su posterior análisis en formato Excel.
+Este sistema ofrece una solución integral para:
+•	Digitalizar y estructurar información contenida en documentos PDF
+•	Reconocer texto tipografiado y manuscrito en formularios y documentos escaneados
+•	Automatizar la extracción de datos repetitivos desde formularios estandarizados
+•	Generar reportes en formato Excel con los datos extraídos
+1.2 Alcance
+El sistema abarca las siguientes funcionalidades:
+1.	Gestión de Usuarios:
+o	Registro e inicio de sesión de usuarios
+o	Roles diferenciados (administrador y usuario estándar)
+o	Recuperación de contraseñas mediante correo electrónico
+2.	Gestión de Documentos PDF:
+o	Carga de archivos PDF
+o	Visualización interactiva de documentos
+o	Almacenamiento seguro y organizado
+3.	Selección de Áreas y Extracción:
+o	Interfaz intuitiva para seleccionar regiones específicas dentro del PDF
+o	Asociación de áreas seleccionadas con columnas de datos para el Excel
+o	Guardado de configuraciones para reutilización en documentos similares
+ 
+4.	Procesamiento OCR:
+o	Reconocimiento de texto tipografiado
+o	Reconocimiento de escritura manuscrita
+o	Optimización de imagen para mejorar la precisión del reconocimiento
+5.	Exportación a Excel:
+o	Generación de archivos XLSX con los datos extraídos
+o	Opción de exportación a CSV
+o	Personalización de nombres de columnas
+1.3 Requisitos del Sistema
+Requisitos de Hardware (Servidor)
+•	Procesador: Mínimo 2 núcleos a 2.0 GHz
+•	Memoria RAM: Mínimo 2GB (4GB recomendado)
+•	Almacenamiento: Mínimo 10GB de espacio disponible
+•	Conexión a Internet estable
+Requisitos de Software
+•	Servidor Web: Apache 2.4 o superior
+•	Lenguaje de Programación: PHP 7.4 o superior
+•	Base de Datos: MySQL 5.7 o superior / MariaDB 10.2 o superior
+•	Dependencias de PHP: 
+o	Extensión PDO y PDO_MySQL
+o	Extensión GD para manipulación de imágenes
+o	Extensión mbstring para manejo de caracteres multibyte
+o	Extensión fileinfo para validación de MIME
+o	Extensión xml para procesamiento de documentos XML
+o	Extensión zip para manejo de archivos Excel
+•	Software adicional: 
+o	Tesseract OCR 4.0 o superior
+o	Ghostscript 9.50 o superior
+Requisitos del Cliente
+•	Navegador web moderno (Chrome, Firefox, Edge, Safari en sus versiones recientes)
+•	JavaScript habilitado
+•	Mínimo 2GB de RAM para procesamiento fluido
+2. Arquitectura del Sistema
+2.1 Patrón MVC
+El sistema implementa el patrón de diseño Modelo-Vista-Controlador (MVC), que permite una clara separación de responsabilidades y facilita el mantenimiento y escalabilidad del código. Esta arquitectura organiza el código en tres componentes principales:
+Modelo (Model):
+•	Gestiona la lógica de negocio y las interacciones con la base de datos
+•	Implementa clases como User, Document, DocumentArea y DocumentTemplate
+•	Encapsula reglas de validación y manipulación de datos
+Vista (View):
+•	Presenta la interfaz de usuario y renderiza los datos
+•	Implementa plantillas HTML con PHP incrustado
+•	Utiliza Bootstrap/Tailwind para un diseño responsive
+•	Incorpora JavaScript para interactividad del lado del cliente
+Controlador (Controller):
+•	Gestiona las solicitudes HTTP y coordina la interacción entre modelos y vistas
+•	Implementa clases como AuthController, PdfController, OcrController y ExcelController
+•	Realiza la validación de entradas y maneja la lógica de flujo de la aplicación
+2.2 Diagrama de Arquitectura
+La arquitectura del sistema se puede visualizar en tres capas principales:
+1.	Capa de Presentación:
+o	Interfaces de usuario (HTML, CSS, JavaScript)
+o	Formularios de entrada
+o	Visualización de PDFs
+o	Selector interactivo de áreas
+2.	Capa de Aplicación:
+o	Controladores MVC
+o	Servicios de procesamiento de OCR
+o	Lógica de autenticación y autorización
+o	Generación de archivos Excel
+3.	Capa de Datos:
+o	Modelos de acceso a datos
+o	Sistema de gestión de bases de datos MySQL
+o	Almacenamiento de archivos PDFs
+o	Caché de resultados de OCR
+2.3 Componentes Principales
+Core Framework
+El núcleo del sistema proporciona las funcionalidades básicas para el framework MVC:
+•	Router: Maneja el ruteo de URLs a controladores específicos
+•	Request: Encapsula y procesa datos de solicitud HTTP
+•	Response: Gestiona la generación de respuestas HTTP
+•	Session: Administra el estado de la sesión del usuario
+•	Database: Proporciona una capa de abstracción para operaciones de base de datos
+Módulos Funcionales
+El sistema está organizado en módulos funcionales que implementan capacidades específicas:
+•	Módulo de Autenticación: Gestión de usuarios, registro, inicio de sesión
+•	Módulo de Gestión de PDF: Carga, visualización y manipulación de PDFs
+•	Módulo de OCR: Procesamiento de imágenes y reconocimiento de texto
+•	Módulo de Exportación Excel: Generación de archivos Excel/CSV
+Servicios Externos
+El sistema se integra con varias librerías y servicios externos:
+•	TCPDF/FPDI: Para manipulación y visualización de PDFs
+•	Tesseract OCR: Para el reconocimiento óptico de caracteres
+•	PHPSpreadsheet: Para generación de archivos Excel
+•	PDF.js: Para visualización de PDFs en el navegador
+ 
+3. Tecnologías Implementadas
+3.1 Backend
+PHP 7.4+
+El sistema utiliza PHP como lenguaje principal de backend, aprovechando las características modernas como:
+•	Tipos de retorno
+•	Propiedades tipadas
+•	Arrow functions
+•	Spread operator
+•	Null coalescing assignment operator (??=)
+Framework MVC Personalizado
+Se ha implementado un framework MVC ligero y eficiente que incluye:
+•	Sistema de enrutamiento
+•	Contenedor de inyección de dependencias simplificado
+•	Gestor de sesiones seguras
+•	Sistema de plantillas para vistas
+Librerías PHP
+•	TCPDF/FPDI: Para manipulación y extracción de contenido de archivos PDF
+•	PHPSpreadsheet: Para creación y manipulación de archivos Excel
+•	Tesseract-OCR-PHP: Wrapper de PHP para la API de Tesseract OCR
+•	DotEnv: Para gestión de variables de entorno
+•	Composer: Para gestión de dependencias
+3.2 Frontend
+HTML5 y CSS3
+•	Estructura semántica de HTML5
+•	CSS3 para estilos avanzados y animaciones
+•	Diseño responsive mediante media queries
+ 
+Framework CSS
+•	Bootstrap/Tailwind CSS: Para una interfaz de usuario consistente y responsive
+•	Componentes predefinidos como cards, forms, buttons, alerts
+•	Sistema de grid para layouts adaptables
+JavaScript
+•	Vanilla JS/jQuery: Para interactividad del lado del cliente
+•	PDF.js: Biblioteca de Mozilla para renderizado de PDFs en el navegador
+•	AJAX: Para comunicación asíncrona con el servidor
+•	Selección interactiva de áreas mediante Canvas API
+3.3 Base de Datos
+MySQL
+•	Base de datos relacional para almacenamiento persistente
+•	Tablas optimizadas con índices adecuados
+•	Relaciones definidas mediante claves foráneas
+•	Consultas preparadas para prevenir inyección SQL
+Esquema de Datos
+•	Tablas normalizadas para usuarios, documentos, áreas y plantillas
+•	Campos con tipos de datos optimizados
+•	Restricciones de integridad referencial
+•	Timestamps para seguimiento de creación/modificación
+3.4 Integración con Servicios Externos
+Tesseract OCR
+•	Motor de reconocimiento óptico de caracteres
+•	Configurado para reconocer texto tipografiado y manuscrito
+•	Soporte para múltiples idiomas (español, inglés, etc.)
+•	Procesamiento optimizado para mejorar precisión
+Ghostscript
+•	Utilizado para convertir páginas de PDF a imágenes de alta resolución
+•	Preprocesamiento de imágenes para optimización de OCR
+•	Ajuste de resolución y conversión de formatos
+4. Estructura de la Base de Datos
+4.1 Modelo Entidad-Relación
+La base de datos está diseñada siguiendo principios de normalización para garantizar integridad de datos y eficiencia en las consultas. Las entidades principales son:
+•	Users: Almacena información de usuarios registrados
+•	Documents: Registra los documentos PDF subidos
+•	DocumentAreas: Guarda las áreas seleccionadas en cada documento
+•	DocumentTemplates: Almacena plantillas de configuración reutilizables
+•	TemplateAreas: Registra áreas predefinidas para cada plantilla
+Las relaciones clave incluyen:
+•	Un usuario puede tener muchos documentos
+•	Un documento puede tener muchas áreas seleccionadas
+•	Un usuario puede tener muchas plantillas
+•	Una plantilla puede tener muchas áreas predefinidas
+4.2 Descripción de Tablas
+Tabla: users
+- id: INT (PK, AUTO_INCREMENT) - Identificador único
+- name: VARCHAR(100) - Nombre completo del usuario
+- email: VARCHAR(100) - Correo electrónico (único)
+- password: VARCHAR(255) - Hash de contraseña (bcrypt)
+- role: ENUM('admin', 'user') - Rol del usuario
+- remember_token: VARCHAR(100) - Token para "recordarme"
+- created_at: DATETIME - Fecha de creación
+- updated_at: DATETIME - Fecha de última actualización
+Tabla: documents
+- id: INT (PK, AUTO_INCREMENT) - Identificador único
+- user_id: INT (FK) - Referencia al usuario propietario
+- filename: VARCHAR(255) - Nombre del archivo guardado
+- original_filename: VARCHAR(255) - Nombre original del archivo
+- file_size: INT - Tamaño del archivo en bytes
+- file_path: VARCHAR(255) - Ruta al archivo en el servidor
+- created_at: DATETIME - Fecha de creación
+- updated_at: DATETIME - Fecha de última actualización
+Tabla: document_areas
+- id: INT (PK, AUTO_INCREMENT) - Identificador único
+- document_id: INT (FK) - Referencia al documento
+- column_name: VARCHAR(100) - Nombre de la columna en Excel
+- x_pos: FLOAT - Posición X del área (en puntos PDF)
+- y_pos: FLOAT - Posición Y del área (en puntos PDF)
+- width: FLOAT - Ancho del área
+- height: FLOAT - Alto del área
+- page_number: INT - Número de página en el PDF
+- created_at: DATETIME - Fecha de creación
+- updated_at: DATETIME - Fecha de última actualización
+Tabla: document_templates
+- id: INT (PK, AUTO_INCREMENT) - Identificador único
+- user_id: INT (FK) - Referencia al usuario propietario
+- name: VARCHAR(100) - Nombre de la plantilla
+- description: TEXT - Descripción detallada
+- created_at: DATETIME - Fecha de creación
+- updated_at: DATETIME - Fecha de última actualización
+Tabla: template_areas
+- id: INT (PK, AUTO_INCREMENT) - Identificador único
+- template_id: INT (FK) - Referencia a la plantilla
+- column_name: VARCHAR(100) - Nombre de la columna en Excel
+- x_pos: FLOAT - Posición X del área
+- y_pos: FLOAT - Posición Y del área
+- width: FLOAT - Ancho del área
+- height: FLOAT - Alto del área
+- page_number: INT - Número de página
+- created_at: DATETIME - Fecha de creación
+- updated_at: DATETIME - Fecha de última actualización
+Tabla: sessions
+- id: VARCHAR(128) (PK) - Identificador de sesión
+- user_id: INT (FK) - Referencia al usuario
+- ip_address: VARCHAR(45) - IP del usuario
+- user_agent: TEXT - Información del navegador
+- payload: TEXT - Datos de sesión serializados
+- last_activity: INT - Timestamp de última actividad
+Tabla: password_resets
+- email: VARCHAR(100) - Correo electrónico
+- token: VARCHAR(100) - Token único de restablecimiento
+- created_at: DATETIME - Fecha de creación
+4.3 Índices y Optimización
+Para mejorar el rendimiento de las consultas, se han implementado los siguientes índices:
+•	Índices Primarios: Todas las tablas tienen una clave primaria
+•	Índices Foráneos: Todas las claves foráneas están indexadas (user_id, document_id, template_id)
+•	Índices Únicos: En campos como email en la tabla users
+•	Índices Compuestos: Para consultas frecuentes específicas
+Optimizaciones adicionales:
+•	Uso de tipos de datos apropiados para reducir el espacio de almacenamiento
+•	Normalización adecuada para minimizar redundancia de datos
+•	Campos de timestamp para facilitar la caché y la validación de datos
+ 
+5. Módulos Funcionales
+5.1 Autenticación y Gestión de Usuarios
+El módulo de autenticación proporciona funcionalidades completas para la gestión de usuarios:
+Registro de Usuario
+•	Validación de datos de entrada (nombre, email, contraseña)
+•	Verificación de unicidad de email
+•	Almacenamiento seguro de contraseñas mediante hash bcrypt
+•	Asignación de roles predeterminados (usuario estándar)
+Inicio de Sesión
+•	Autenticación mediante email y contraseña
+•	Opción "Recordarme" para sesiones persistentes
+•	Protección contra ataques de fuerza bruta
+•	Gestión segura de sesiones
+Recuperación de Contraseña
+•	Generación de tokens únicos y con tiempo de expiración
+•	Envío de correos electrónicos con enlaces de restablecimiento
+•	Proceso seguro de restablecimiento de contraseña
+•	Invalidación automática de tokens expirados
+Control de Acceso
+•	Diferentes niveles de acceso (administrador/usuario)
+•	Middleware de autenticación para proteger rutas
+•	Verificación de permisos para acciones específicas
+•	Prevención de acceso no autorizado a recursos
+5.2 Gestión de Documentos PDF
+Este módulo maneja todas las operaciones relacionadas con los documentos PDF:
+Subida de Archivos
+•	Interfaz de arrastrar y soltar (drag & drop)
+•	Validación de tipo MIME y extensión
+•	Límite configurable de tamaño de archivo
+•	Barra de progreso para archivos grandes
+Almacenamiento Seguro
+•	Generación de nombres de archivo únicos
+•	Organización en directorios por usuario
+•	Protección contra acceso directo a archivos
+•	Validación de permisos para cada operación
+Visualización de PDFs
+•	Renderizado en el navegador mediante PDF.js
+•	Navegación entre páginas
+•	Controles de zoom y ajuste a la pantalla
+•	Carga optimizada para rendimiento
+Gestión del Ciclo de Vida
+•	Historial de documentos por usuario
+•	Opción de eliminar documentos
+•	Limpieza automática de archivos temporales
+•	Estadísticas de uso y almacenamiento
+5.3 Selección Interactiva de Áreas
+Este módulo proporciona una interfaz intuitiva para seleccionar regiones dentro del PDF:
+Interfaz de Selección
+•	Canvas interactivo superpuesto al PDF
+•	Herramienta de dibujo de rectángulos para seleccionar áreas
+•	Visualización de áreas ya seleccionadas
+•	Posibilidad de modificar o eliminar selecciones existentes
+Gestión de Áreas
+•	Asignación de nombres de columna a cada área
+•	Guardado de coordenadas precisas (x, y, ancho, alto)
+•	Asociación con páginas específicas del documento
+•	Vista previa de selecciones en tiempo real
+Plantillas Reutilizables
+•	Guardado de configuraciones de áreas como plantillas
+•	Aplicación de plantillas a nuevos documentos
+•	Categorización de plantillas por tipo de documento
+•	Ajuste fino de posiciones para adaptarse a variantes
+Interfaz de Usuario
+•	Controles intuitivos para la selección de áreas
+•	Lista de áreas seleccionadas con vista previa
+•	Opciones de edición y eliminación por área
+•	Navegación entre páginas manteniendo selecciones
+5.4 Procesamiento OCR
+Este módulo implementa la funcionalidad de reconocimiento óptico de caracteres:
+Extracción de Imágenes
+•	Conversión de páginas PDF a imágenes de alta resolución
+•	Recorte preciso de las áreas seleccionadas
+•	Preprocesamiento para optimizar la calidad
+•	Ajuste de resolución según el tipo de contenido
+Optimización de Imágenes
+•	Ajuste de contraste y brillo
+•	Eliminación de ruido y artefactos
+•	Binarización adaptativa para textos
+•	Filtros específicos para mejorar reconocimiento de escritura manuscrita
+Reconocimiento de Texto
+•	Integración con Tesseract OCR
+•	Configuración optimizada para textos manuscritos
+•	Soporte para múltiples idiomas
+•	Modos específicos para diferentes tipos de contenido (texto, números, etc.)
+Procesamiento en Lotes
+•	Ejecución secuencial para múltiples áreas
+•	Gestión eficiente de recursos del servidor
+•	Indicadores de progreso para el usuario
+•	Caché de resultados para mejorar rendimiento
+5.5 Generación de Archivos Excel
+Este módulo gestiona la exportación de datos extraídos a formatos Excel:
+Creación de Documentos Excel
+•	Generación de archivos XLSX mediante PHPSpreadsheet
+•	Estructura de datos basada en las áreas seleccionadas
+•	Formato adecuado para diferentes tipos de datos
+•	Optimización del tamaño del archivo resultante
+Personalización del Formato
+•	Configuración de nombres de columnas personalizados
+•	Aplicación de estilos básicos (negrita, colores, bordes)
+•	Ajuste automático de ancho de columnas
+•	Formato condicional para destacar valores específicos
+Opciones de Exportación
+•	Selección entre formatos XLSX y CSV
+•	Configuración de delimitadores para CSV
+•	Opciones de codificación de caracteres
+•	Descarga directa o almacenamiento en servidor
+Manipulación Avanzada
+•	Agrupamiento de datos relacionados
+•	Filtros preconfigurados
+•	Totales y subtotales automáticos
+•	Fórmulas básicas para cálculos predefinidos
+6. Flujos de Trabajo
+6.1 Proceso de Extracción de Datos
+El flujo de trabajo principal para extraer datos de un documento PDF consta de los siguientes pasos:
+1.	Subida del Documento
+o	El usuario inicia sesión en el sistema
+o	Navega a la sección de subida de documentos
+o	Selecciona o arrastra un archivo PDF
+o	El sistema valida y almacena el documento
+2.	Visualización y Selección de Áreas
+o	El usuario visualiza el documento subido
+o	Utiliza la herramienta de selección para definir áreas de interés
+o	Asigna nombres de columna a cada área seleccionada
+o	Guarda la configuración de áreas
+3.	Configuración de OCR
+o	Opcionalmente, el usuario puede ajustar parámetros de OCR
+o	Selecciona idiomas para el reconocimiento
+o	Establece preferencias para escritura manuscrita o impresa
+o	Aplica ajustes específicos para mejorar el reconocimiento
+4.	Procesamiento y Extracción
+o	El sistema procesa cada área seleccionada
+o	Aplica OCR para extraer el texto de cada región
+o	Organiza los resultados según la estructura definida
+o	Muestra una vista previa de los datos extraídos
+5.	Exportación a Excel
+o	El usuario configura opciones de exportación
+o	Selecciona formato (XLSX o CSV)
+o	Personaliza detalles finales si es necesario
+o	El sistema genera y ofrece el archivo para descarga
+6.	Gestión de Plantillas (opcional)
+o	El usuario puede guardar la configuración como plantilla
+o	Asigna nombre y descripción para identificarla
+o	La plantilla queda disponible para futuros documentos similares
+6.2 Diagramas de Secuencia
+Secuencia de Autenticación
+1.	Usuario → Sistema: Envía credenciales
+2.	Sistema: Valida credenciales
+3.	Sistema: Crea sesión segura
+4.	Sistema → Usuario: Redirige al dashboard
+Secuencia de Subida de PDF
+1.	Usuario → Sistema: Envía archivo PDF
+2.	Sistema: Valida archivo
+3.	Sistema: Almacena archivo en directorio seguro
+4.	Sistema: Registra metadatos en base de datos
+5.	Sistema → Usuario: Confirma subida exitosa
+Secuencia de Selección de Áreas
+1.	Usuario → Sistema: Solicita ver PDF
+2.	Sistema → Usuario: Muestra PDF renderizado
+3.	Usuario → Sistema: Selecciona áreas (múltiples interacciones)
+4.	Usuario → Sistema: Guarda selecciones
+5.	Sistema: Almacena coordenadas de áreas
+6.	Sistema → Usuario: Confirma guardado exitoso
+Secuencia de Procesamiento OCR
+1.	Usuario → Sistema: Solicita procesar documento
+2.	Sistema: Extrae imágenes de áreas seleccionadas
+3.	Sistema: Preprocesa imágenes para OCR
+4.	Sistema: Ejecuta OCR en cada imagen
+5.	Sistema: Compila resultados
+6.	Sistema → Usuario: Muestra resultados de OCR
+Secuencia de Exportación a Excel
+1.	Usuario → Sistema: Solicita exportar a Excel
+2.	Sistema: Genera estructura del documento Excel
+3.	Sistema: Inserta datos extraídos
+4.	Sistema: Aplica formato y configuraciones
+5.	Sistema → Usuario: Ofrece archivo para descarga
+ 
+7. Seguridad
+7.1 Autenticación y Autorización
+El sistema implementa robustas medidas de seguridad para proteger la autenticación de usuarios:
+Protección de Contraseñas
+•	Almacenamiento mediante hashes bcrypt
+•	Factor de trabajo (cost) configurable
+•	Nunca se almacenan contraseñas en texto plano
+•	Validaciones de complejidad de contraseña
+Gestión de Sesiones
+•	Generación segura de IDs de sesión
+•	Regeneración de ID en eventos críticos (login, cambio de privilegios)
+•	Protección contra session fixation
+•	Expiración configurable de sesiones inactivas
+Protección CSRF
+•	Tokens CSRF en todos los formularios
+•	Validación de tokens en solicitudes POST
+•	Generación segura de tokens únicos por sesión
+•	Renovación periódica de tokens
+Control de Acceso
+•	Middleware de autenticación para rutas protegidas
+•	Verificación de propiedad de recursos (por ejemplo, solo el propietario puede acceder a sus documentos)
+•	Roles diferenciados con permisos específicos
+•	Revisión exhaustiva de permisos para cada operación sensible
+7.2 Protección de Datos
+El sistema implementa medidas para proteger la integridad y confidencialidad de los datos:
+Seguridad en la Base de Datos
+•	Consultas preparadas para prevenir inyección SQL
+•	Escape apropiado de datos en consultas
+•	Capa de abstracción para operaciones de base de datos
+•	Validación de integridad referencial
+Protección de Archivos
+•	Almacenamiento fuera del directorio web público
+•	Nombres aleatorios para archivos almacenados
+•	Control de acceso basado en permisos
+•	Validación de propiedad antes de cualquier operación
+Encriptación
+•	Comunicación HTTPS para todas las interacciones
+•	Protección de datos sensibles en tránsito
+•	Almacenamiento seguro de tokens y credenciales
+•	Uso de algoritmos de encriptación estándar de la industria
+•	Rotación periódica de claves de cifrado
+Auditoría y Trazabilidad
+•	Registro de acciones críticas (login, modificación de datos, eliminación)
+•	Timestamp para todas las operaciones importantes
+•	Registro de direcciones IP y agentes de usuario
+•	Monitoreo de actividades sospechosas
+7.3 Validación de Entradas
+El sistema implementa una validación exhaustiva de todas las entradas de usuarios para prevenir ataques y garantizar la integridad de los datos:
+Validación de Formularios
+•	Validación del lado del cliente mediante JavaScript
+•	Validación del lado del servidor para cada entrada
+•	Sanitización de datos para prevenir XSS y otros ataques
+•	Manejo adecuado de caracteres especiales y codificaciones
+Protección Contra Ataques Comunes
+•	Defensa contra Cross-Site Scripting (XSS)
+•	Prevención de Cross-Site Request Forgery (CSRF)
+•	Protección contra ataques de inyección
+•	Limitación de tasas para prevenir ataques de fuerza bruta
+Validación de Datos Especializados
+•	Verificación de formato para direcciones de correo electrónico
+•	Validación de tamaños y límites para todos los campos
+•	Comprobación de integridad para datos relacionados
+•	Manejo apropiado de valores nulos o vacíos
+Mensajes de Error Seguros
+•	Mensajes de error genéricos para usuarios
+•	Registro detallado de errores para administradores
+•	Prevención de divulgación de información sensible
+•	Redirección apropiada en caso de errores de validación
+
+7.4 Seguridad en la Subida de Archivos
+Dada la naturaleza del sistema, se implementan medidas específicas para la gestión segura de la subida de archivos:
+Validación de Archivos
+•	Verificación estricta de tipos MIME permitidos
+•	Comprobación de extensiones de archivo
+•	Análisis de contenido para validar formato PDF real
+•	Límites configurables de tamaño de archivo
+Almacenamiento Seguro
+•	Ubicación de archivos fuera del directorio web público
+•	Renombrado de archivos con identificadores únicos
+•	Separación por directorios según usuario o función
+•	Permisos restrictivos a nivel de sistema de archivos
+Procesamiento Seguro
+•	Manejo de excepciones durante el procesamiento
+•	Límites de tiempo y recursos para prevenir ataques DoS
+•	Validación de integridad antes y después del procesamiento
+•	Eliminación segura de archivos temporales
+ 
+Protección del Servidor
+•	Configuración de límites en php.ini para carga de archivos
+•	Uso de herramientas de escaneo de malware si es necesario
+•	Monitoreo de actividades de subida sospechosas
+•	Aislamiento de entornos para procesamiento de archivos
+8. Rendimiento y Optimización
+8.1 Estrategias de Caché
+El sistema implementa diversas estrategias de caché para optimizar el rendimiento y reducir la carga del servidor:
+Caché de Aplicación
+•	Almacenamiento en caché de resultados de consultas frecuentes
+•	Caché de sesión para datos de usuario activo
+•	Memorización de resultados de cálculos intensivos
+•	Sistema de invalidación de caché para mantener coherencia
+Caché de Archivos
+•	Caché de documentos PDF procesados
+•	Almacenamiento intermedio de resultados de OCR
+•	Caché de imágenes extraídas y procesadas
+•	Estrategia de TTL (Time-To-Live) para expiración automática
+Caché HTTP
+•	Cabeceras de caché adecuadas para recursos estáticos
+•	Control de versiones para CSS y JavaScript
+•	Estrategia de fingerprinting para invalidación eficiente
+•	Configuración de caché a nivel de servidor web
+Optimización de Recursos
+•	Compresión de respuestas HTTP (gzip/deflate)
+•	Minificación de CSS y JavaScript
+•	Carga diferida (lazy loading) de recursos no críticos
+•	Concatenación de archivos para reducir solicitudes HTTP
+8.2 Optimización de Base de Datos
+Se implementan diversas técnicas para optimizar el rendimiento de la base de datos:
+Estructura y Diseño
+•	Diseño normalizado para reducir redundancia
+•	Índices estratégicos en columnas de búsqueda frecuente
+•	Tipos de datos optimizados para cada columna
+•	Claves primarias eficientes
+Consultas Optimizadas
+•	Uso de consultas preparadas para ejecución repetida
+•	Selección específica de columnas en lugar de SELECT *
+•	Joins optimizados para relaciones complejas
+•	Paginación para conjuntos grandes de resultados
+Gestión de Conexiones
+•	Pool de conexiones para reutilización eficiente
+•	Cierre adecuado de conexiones tras su uso
+•	Transacciones para operaciones atómicas
+•	Configuración óptima de parámetros de MySQL
+Monitorización y Mantenimiento
+•	Análisis periódico de consultas lentas
+•	Reconstrucción de índices según necesidad
+•	Optimización programada de tablas
+•	Análisis de planes de ejecución para consultas complejas
+8.3 Procesamiento Asíncrono
+Para tareas intensivas como el OCR, el sistema implementa estrategias de procesamiento asíncrono:
+Procesamiento en Segundo Plano
+•	Ejecución de tareas OCR en procesos separados
+•	Notificación al usuario cuando el procesamiento está completo
+•	Implementación de colas de trabajos para operaciones largas
+•	Límites configurables de procesos concurrentes
+Indicadores de Progreso
+•	Barras de progreso para operaciones prolongadas
+•	Actualizaciones en tiempo real mediante AJAX
+•	Estimaciones de tiempo restante
+•	Posibilidad de cancelar operaciones en curso
+Gestión de Recursos
+•	Distribución equilibrada de carga de CPU
+•	Control de memoria para evitar desbordamientos
+•	Timeouts configurables para operaciones
+•	Recuperación automática ante fallos
+Optimización de Rendimiento
+•	Procesamiento por lotes para múltiples áreas
+•	Paralelización cuando es posible
+•	Priorización de tareas según importancia
+•	Análisis de cuellos de botella y optimización continua
+9. Compatibilidad con Hostinger
+9.1 Requisitos del Hosting
+El sistema está diseñado específicamente para ser compatible con los entornos de hosting de Hostinger, considerando los siguientes requisitos:
+Versiones de Software
+•	PHP 7.4 o superior (compatible con las opciones disponibles en Hostinger)
+•	MySQL 5.7 o superior (o MariaDB equivalente)
+•	Apache 2.4 con mod_rewrite habilitado
+•	Soporte para extensiones PHP requeridas
+Límites de Recursos
+•	Adaptación a límites de memoria PHP (típicamente 256MB-512MB)
+•	Optimización para límites de tiempo de ejecución (30-300 segundos)
+•	Gestión eficiente de espacio en disco
+•	Respeto a límites de bases de datos y tamaño de tablas
+Configuraciones Específicas
+•	Compatibilidad con configuraciones .htaccess de Hostinger
+•	Ajuste a política de rutas y directorios virtuales
+•	Adaptación a restricciones específicas del proveedor
+•	Soporte para dominio/subdominio configurado
+Integraciones
+•	Compatibilidad con servicios de correo electrónico de Hostinger
+•	Uso apropiado de SSL/TLS proporcionado por el hosting
+•	Consideración de políticas de backup y restauración
+•	Adaptación a herramientas de administración disponibles
+9.2 Configuración Específica
+Se han implementado ajustes específicos para garantizar un funcionamiento óptimo en entornos Hostinger:
+Configuración PHP
+•	Archivo .htaccess optimizado para entornos Hostinger
+•	Ajustes específicos para php.ini o equivalentes
+•	Configuración adaptada para limits de upload y procesamiento
+•	Definición de zonas horarias y configuraciones regionales
+Estructura de Archivos
+•	Organización de directorios compatible con restricciones de Hostinger
+•	Separación adecuada de archivos públicos y privados
+•	Rutas relativas para mayor portabilidad
+•	Permisos de archivos ajustados a políticas de seguridad
+Configuración de Base de Datos
+•	Parámetros de conexión configurables mediante variables de entorno
+•	Compatibilidad con prefijos de tablas para instalaciones compartidas
+•	Transacciones optimizadas para bases de datos compartidas
+•	Manejo eficiente de conexiones
+Optimizaciones de Rendimiento
+•	Estrategias de caché adaptadas al entorno compartido
+•	Minimización de operaciones intensivas en servidor
+•	Procesamiento por lotes para tareas pesadas
+•	Gestión responsable de recursos compartidos
+9.3 Consideraciones de Despliegue
+Para un despliegue exitoso en entornos Hostinger, se deben tener en cuenta los siguientes aspectos:
+Proceso de Instalación
+•	Instrucciones detalladas para despliegue mediante FTP o cPanel
+•	Scripts de configuración inicial automatizados
+•	Verificación de requisitos previos a la instalación
+•	Guía paso a paso para configuración post-instalación
+Gestión de Dependencias
+•	Inclusión de dependencias precompiladas cuando sea posible
+•	Instrucciones para instalar Composer en entornos limitados
+•	Alternativas para paquetes que requieran extensiones no disponibles
+•	Manejo de versiones compatibles con restricciones del hosting
+Integración con Servicios
+•	Configuración para usar servicios de correo de Hostinger
+•	Adaptación a servicios de CRON disponibles
+•	Compatibilidad con certificados SSL proporcionados
+•	Utilización eficiente de subdominios y dominios adicionales
+Mantenimiento y Actualizaciones
+•	Procedimientos seguros para actualizaciones
+•	Estrategias de backup antes de cambios importantes
+•	Manejo de actualizaciones de dependencias
+•	Compatibilidad continua con cambios en la plataforma Hostinger
+ 
+10. Guía de Instalación y Configuración
+10.1 Instalación en Entorno Local
+Para configurar el sistema en un entorno de desarrollo local, siga estos pasos:
+Requisitos Previos
+1.	Instalar PHP 7.4 o superior
+2.	Configurar un servidor web (Apache/Nginx)
+3.	Instalar MySQL 5.7 o superior
+4.	Instalar Composer para gestión de dependencias
+5.	Instalar Tesseract OCR y Ghostscript
+Pasos de Instalación
+1.	Clonar el repositorio desde el control de versiones
+2.	git clone https://github.com/usuario/pdf-to-excel.git
+3.	cd pdf-to-excel
+4.	Instalar dependencias PHP mediante Composer
+5.	composer install
+6.	Crear una base de datos MySQL
+7.	CREATE DATABASE pdf_extract CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+8.	Importar la estructura de la base de datos
+9.	mysql -u usuario -p pdf_extract < database_schema.sql
+10.	Configurar el archivo de variables de entorno
+11.	cp .env.example .env
+12.	# Editar .env con las credenciales correctas
+13.	Configurar los permisos de directorios
+14.	chmod -R 775 public/uploads
+15.	chmod -R 775 storage/logs
+16.	Configurar el servidor web para apuntar al directorio public
+17.	Acceder a la aplicación a través del navegador
+18.	http://localhost/
+ 
+10.2 Despliegue en Producción (Hostinger)
+Para desplegar el sistema en un entorno de producción en Hostinger, siga estos pasos:
+Preparación del Código
+1.	Asegúrese de que todas las dependencias están instaladas y actualizadas
+2.	composer install --no-dev --optimize-autoloader
+3.	Configurar las variables de entorno para producción
+4.	# Editar .env con configuración de producción
+5.	APP_ENV=production
+6.	APP_DEBUG=false
+7.	Comprimir el código fuente para su transferencia
+8.	zip -r pdf-to-excel.zip . -x "vendor/*" "node_modules/*" ".git/*"
+Despliegue en Hostinger
+1.	Acceder al Panel de Control de Hostinger (hPanel)
+2.	Navegar a la sección de Archivos o File Manager
+3.	Crear un subdominio específico para la aplicación (opcional)
+4.	pdf-app.tudominio.com
+5.	Subir y descomprimir el archivo zip en el directorio raíz correspondiente
+6.	Subir el archivo .htaccess adaptado a Hostinger
+7.	Instalar las dependencias en el servidor (si está disponible SSH)
+8.	cd /path/to/application
+9.	composer install --no-dev --optimize-autoloader
+O subir la carpeta vendor completa mediante FTP si no hay acceso SSH
+10.	Crear la base de datos desde el panel de Hostinger
+o	Acceder a la sección MySQL Databases
+o	Crear una nueva base de datos y usuario
+o	Asignar todos los permisos al usuario
+11.	Importar la estructura de base de datos
+o	Acceder a phpMyAdmin desde el panel
+o	Seleccionar la base de datos creada
+o	Importar el archivo database_schema.sql
+12.	Configurar el archivo .env con las credenciales correctas
+13.	Establecer los permisos adecuados para directorios de escritura
+14.	public/uploads (755 o 775)
+15.	storage/logs (755 o 775)
+10.3 Configuración Post-Instalación
+Una vez instalado el sistema, se deben realizar las siguientes configuraciones:
+Configuración de Seguridad
+1.	Crear una cuenta de administrador
+2.	Acceder a /register y crear el primer usuario
+3.	Actualizar manualmente el rol a 'admin' en la base de datos para el primer usuario
+4.	Verificar la configuración de seguridad
+o	Comprobar que todas las rutas sensibles requieren autenticación
+o	Asegurar que el directorio de uploads no sea accesible directamente
+o	Verificar que las cabeceras de seguridad estén configuradas
+5.	Configurar el servicio de correo electrónico
+o	Actualizar las credenciales SMTP en el archivo .env
+o	Probar el envío de correos para recuperación de contraseñas
+Configuración de OCR
+1.	Verificar la instalación de Tesseract
+2.	# Comprobar versión
+3.	tesseract --version
+4.	# Verificar idiomas disponibles
+5.	tesseract --list-langs
+6.	Instalar paquetes de idioma adicionales si es necesario
+7.	# Para Ubuntu/Debian
+8.	sudo apt-get install tesseract-ocr-spa tesseract-ocr-eng
+9.	Configurar rutas y opciones en el archivo .env
+10.	TESSERACT_PATH=/usr/bin/tesseract
+11.	TESSERACT_LANGS=spa,eng
+12.	Realizar pruebas de OCR con diferentes tipos de documentos
+ 
+Optimización de Rendimiento
+1.	Configurar el caché si está disponible
+2.	Activar opciones de caché en .env
+3.	Configurar TTL para diferentes tipos de caché
+4.	Optimizar la carga de archivos
+5.	Ajustar límites de tamaño según necesidades específicas
+6.	Configurar compresión para archivos estáticos
+7.	Realizar pruebas de carga y ajustar parámetros según sea necesario
+11. Mantenimiento y Escalabilidad
+11.1 Estrategias de Mantenimiento
+Para garantizar el funcionamiento óptimo del sistema a lo largo del tiempo, se recomiendan las siguientes prácticas de mantenimiento:
+Mantenimiento Rutinario
+•	Monitoreo regular de logs de errores
+•	Verificación periódica de espacio en disco
+•	Backup automático de base de datos (diario/semanal)
+•	Eliminación programada de archivos temporales
+Actualizaciones de Seguridad
+•	Revisión regular de vulnerabilidades en dependencias
+•	Actualización oportuna de bibliotecas críticas
+•	Aplicación de parches de seguridad para PHP y MySQL
+•	Auditorías periódicas de código y configuración
+Optimización Continua
+•	Análisis de consultas lentas en base de datos
+•	Reconstrucción regular de índices
+•	Monitoreo de tiempos de respuesta
+•	Ajuste de parámetros de caché según patrones de uso
+Mantenimiento Preventivo
+•	Pruebas periódicas de recuperación de backups
+•	Simulacros de fallos para verificar resilencia
+•	Verificación de integridad de datos
+•	Monitoreo proactivo de recursos del servidor
+11.2 Posibilidades de Escalabilidad
+El sistema ha sido diseñado considerando futuras necesidades de escalabilidad:
+Escalabilidad Vertical
+•	Optimización para aprovechar recursos adicionales de CPU/RAM
+•	Configuración adaptable a servidores más potentes
+•	Ajustes de rendimiento para diferentes capacidades de hardware
+•	Parámetros configurables para límites de procesamiento
+Escalabilidad Horizontal
+•	Diseño que permite separar componentes en diferentes servidores
+•	Base de datos separable del servidor de aplicación
+•	Posibilidad de implementar balanceo de carga
+•	Procesamiento OCR distribuible en múltiples nodos
+Escalabilidad de Características
+•	Arquitectura modular para fácil adición de funcionalidades
+•	API interna bien definida para extensiones
+•	Sistema de plugins para funcionalidades adicionales
+•	Separación clara entre núcleo y módulos especializados
+Adaptabilidad
+•	Soporte para múltiples proveedores de base de datos
+•	Diseño portable entre diferentes entornos
+•	Independencia de características específicas del servidor
+•	Configuración flexible para diferentes casos de uso
+11.3 Gestión de Dependencias
+La gestión adecuada de dependencias es crucial para la mantenibilidad a largo plazo:
+Política de Versiones
+•	Dependencias específicas con rangos de versión definidos
+•	Bloqueo de versiones en producción (composer.lock)
+•	Documentación clara de requisitos mínimos
+•	Estrategia para actualizaciones mayores
+Monitoreo de Vulnerabilidades
+•	Verificación regular de vulnerabilidades en dependencias
+•	Proceso definido para actualizaciones de seguridad
+•	Análisis de impacto para cambios en dependencias
+•	Pruebas de regresión tras actualizaciones
+Reducción de Dependencias
+•	Uso selectivo de librerías externas
+•	Preferencia por dependencias bien mantenidas y activas
+•	Evaluación cuidadosa de nuevas dependencias
+•	Consideración de alternativas nativas cuando sea posible
+Plan de Contingencia
+•	Documentación de alternativas para dependencias críticas
+•	Forks o snapshots de seguridad para componentes esenciales
+•	Estrategia para componentes descontinuados
+•	Procedimientos de migración entre tecnologías
+12. Apéndices
+12.1 Glosario de Términos
+•	OCR (Optical Character Recognition): Tecnología que permite reconocer texto en imágenes y convertirlo a texto editable.
+•	PDF (Portable Document Format): Formato de archivo desarrollado por Adobe para presentar documentos independientemente del software o hardware.
+•	MVC (Modelo-Vista-Controlador): Patrón de arquitectura de software que separa los datos, la lógica de negocio y la interfaz de usuario.
+•	API (Application Programming Interface): Conjunto de definiciones y protocolos para construir e integrar software de aplicaciones.
+•	Framework: Estructura conceptual y tecnológica que sirve como base para la organización y desarrollo de software.
+•	CRUD (Create, Read, Update, Delete): Operaciones básicas de almacenamiento persistente.
+•	Tesseract: Motor de reconocimiento óptico de caracteres de código abierto.
+•	Hash: Función que convierte datos en una cadena de longitud fija que actúa como huella digital de los datos.
+•	Middleware: Software que actúa como puente entre diferentes aplicaciones o componentes.
+•	Frontend: Parte de la aplicación con la que interactúa directamente el usuario.
+•	Backend: Parte de la aplicación responsable del acceso a datos y procesamiento de lógica de negocio.
+•	AJAX (Asynchronous JavaScript and XML): Técnica de desarrollo web para crear aplicaciones interactivas.
+12.2 Preguntas Frecuentes
+Instalación y Configuración
+1.	¿Qué versión de PHP es necesaria? R: Se requiere PHP 7.4 o superior debido al uso de características como propiedades tipadas y otras mejoras de rendimiento.
+2.	¿Cómo puedo verificar si tengo Tesseract OCR instalado correctamente? R: Puede ejecutar tesseract --version desde la línea de comandos. Si está instalado, mostrará la versión y los detalles de compilación.
+3.	¿Puedo usar otro sistema de base de datos en lugar de MySQL? R: Aunque el sistema está optimizado para MySQL, podría adaptarse a otros sistemas como PostgreSQL con modificaciones menores en el código de la capa de abstracción de base de datos.
+4.	¿Es necesario instalar Ghostscript? R: Sí, Ghostscript es requerido para el procesamiento de PDFs y la conversión a imágenes de alta calidad para el OCR.
+Uso del Sistema
+1.	¿Qué tipos de PDF son compatibles? R: El sistema es compatible con la mayoría de PDFs, incluyendo documentos escaneados, formularios y PDFs generados digitalmente.
+2.	¿Qué idiomas puedo usar para el OCR? R: Por defecto, el sistema está configurado para español e inglés, pero se pueden añadir más idiomas instalando los paquetes correspondientes de Tesseract.
+3.	¿Existe un límite en el tamaño de los archivos PDF? R: Por defecto, el límite está establecido en 10MB, pero puede configurarse según las necesidades específicas y las limitaciones del servidor.
+4.	¿Puedo procesar múltiples PDFs en lote? R: La versión actual procesa documentos individualmente, pero está diseñada para facilitar la implementación de procesamiento por lotes en futuras actualizaciones.
+Mantenimiento y Solución de Problemas
+1.	¿Cómo puedo hacer una copia de seguridad del sistema? R: Se recomienda hacer una copia de la base de datos mediante mysqldump y copiar los archivos del directorio de uploads periódicamente.
+2.	¿Qué debo hacer si el OCR no reconoce correctamente el texto? R: Puede intentar mejorar la calidad de imagen del PDF original, ajustar la configuración de OCR o utilizar las herramientas de preprocesamiento manual disponibles en el sistema.
+3.	¿Cómo puedo actualizar a una nueva versión del sistema? R: Siga el procedimiento de actualización detallado en la documentación, que generalmente incluye hacer una copia de seguridad, actualizar los archivos y ejecutar migraciones de base de datos si es necesario.
+4.	¿Qué logs debo revisar si hay problemas? R: Los logs principales se encuentran en el directorio storage/logs/, y también debe revisar los logs de error de PHP y del servidor web para diagnosticar problemas.
+12.3 Resolución de Problemas Comunes
+Problemas de Instalación
+1.	Error: No se puede conectar a la base de datos
+o	Verificar credenciales en el archivo .env
+o	Comprobar que el servicio MySQL está corriendo
+o	Verificar permisos del usuario de la base de datos
+o	Confirmar que la base de datos existe y es accesible
+2.	Error: No se pueden subir archivos PDF
+o	Verificar permisos del directorio uploads
+o	Comprobar configuración de php.ini para upload_max_filesize y post_max_size
+o	Verificar configuración de tiempo máximo de ejecución
+o	Comprobar espacio disponible en disco
+3.	Error: Tesseract OCR no está disponible
+o	Verificar instalación de Tesseract
+o	Comprobar la configuración de la ruta en el archivo .env
+o	Verificar permisos de ejecución
+o	Instalar paquetes de idioma si son necesarios
+4.	Error 500 al acceder a la aplicación
+o	Revisar los logs de error de PHP
+o	Verificar permisos de archivos y directorios
+o	Comprobar configuración de .htaccess
+o	Verificar compatibilidad de versiones de PHP y extensiones
+Problemas de OCR
+1.	El OCR no reconoce texto manuscrito
+o	Verificar que Tesseract está configurado con soporte para manuscrito
+o	Mejorar la calidad de imagen del documento original
+o	Ajustar parámetros de preprocesamiento de imagen
+o	Considerar entrenamiento específico para tipos de letra particular
+2.	Resultados OCR con muchos errores
+o	Mejorar la resolución de la imagen extraída
+o	Aplicar filtros adicionales de preprocesamiento
+o	Verificar que el idioma correcto está seleccionado
+o	Comprobar que el documento está correctamente alineado
+3.	Procesamiento OCR muy lento
+o	Reducir la resolución de procesamiento para un equilibrio rendimiento/precisión
+o	Verificar recursos disponibles en el servidor
+o	Implementar procesamiento por lotes para documentos grandes
+o	Considerar optimización de parámetros de Tesseract
+4.	Error al generar archivos Excel
+o	Verificar que los datos extraídos son válidos
+o	Comprobar permisos de escritura en el directorio temporal
+o	Verificar límites de memoria para procesamiento
+o	Revisar logs detallados para identificar el problema específico
+Problemas de Rendimiento
+1.	La aplicación se carga lentamente
+o	Implementar mecanismos de caché
+o	Optimizar consultas de base de datos
+o	Minimizar y combinar archivos CSS/JavaScript
+o	Considerar uso de CDN para recursos estáticos
+2.	Tiempos de procesamiento excesivos
+o	Implementar procesamiento asíncrono para tareas intensivas
+o	Optimizar algoritmos de procesamiento de imágenes
+o	Ajustar parámetros de OCR para equilibrar precisión y velocidad
+o	Monitorear y liberar recursos no utilizados
+3.	Alto consumo de memoria
+o	Procesar documentos por páginas o secciones
+o	Implementar liberación explícita de memoria tras procesamiento
+o	Ajustar configuración de PHP para gestión de memoria
+o	Considerar actualización de recursos del servidor
+4.	Problemas de concurrencia
+o	Implementar bloqueos para operaciones críticas
+o	Utilizar transacciones para garantizar integridad de datos
+o	Optimizar tiempos de conexión a base de datos
+o	Considerar escalamiento horizontal para alta demanda
+

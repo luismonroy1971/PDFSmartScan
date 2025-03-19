@@ -1,252 +1,256 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\User;
-use Core\Session;
-use Core\Request;
-use Core\Response;
-use function Core\view;
+use App\Core\Session;
+use App\Core\Validator;
+use App\Core\Mailer;
 
-class AuthController {
-    private $userModel;
-    
-    public function __construct() {
-        $this->userModel = new User();
+class AuthController extends BaseController
+{
+    /**
+     * Muestra la página de inicio de sesión
+     */
+    public function showLogin()
+    {
+        return $this->view('auth/login');
     }
     
-    public function showLogin() {
-        if (Session::get('user_id')) {
-            Response::redirect('/dashboard');
+    /**
+     * Procesa el inicio de sesión
+     */
+    public function login()
+    {
+        // Validar datos de entrada
+        $validator = new Validator($_POST);
+        $validator->required(['email', 'password'])
+                  ->email('email');
+        
+        if (!$validator->isValid()) {
+            Session::flash('error', 'Por favor, complete todos los campos correctamente.');
+            Session::flash('errors', $validator->getErrors());
+            Session::flash('old', $_POST);
+            return $this->redirect('/login');
         }
         
-        return view('auth/login');
-    }
-    
-    public function login(Request $request) {
-        $data = $request->getBody();
+        // Intentar autenticar al usuario
+        $user = User::findByEmail($_POST['email']);
         
-        // Validación básica
-        if (empty($data['email']) || empty($data['password'])) {
-            Session::setFlash('error', 'Por favor completa todos los campos');
-            return Response::redirect('/login');
+        if (!$user || !password_verify($_POST['password'], $user->password)) {
+            Session::flash('error', 'Credenciales incorrectas. Por favor, inténtelo de nuevo.');
+            Session::flash('old', ['email' => $_POST['email']]);
+            return $this->redirect('/login');
         }
         
-        // Verificar si el usuario existe
-        $user = $this->userModel->findByEmail($data['email']);
+        // Iniciar sesión
+        Session::set('user_id', $user->id);
+        Session::set('user_name', $user->name);
+        Session::set('user_email', $user->email);
+        Session::set('user_role', $user->role);
         
-        // Agregar registro para depuración
-        error_log("Intento de login para email: " . $data['email'] . " - Usuario encontrado: " . ($user ? 'SÍ' : 'NO'));
-        
-        if (!$user) {
-            Session::setFlash('error', 'El usuario no existe o las credenciales son incorrectas');
-            return Response::redirect('/login');
-        }
-        
-        // Verificar la contraseña 
-        $passwordValid = password_verify($data['password'], $user['password']);
-        
-        // Agregar registro para depuración
-        error_log("Verificación de contraseña para " . $data['email'] . " - Resultado: " . ($passwordValid ? 'VÁLIDO' : 'INVÁLIDO'));
-        
-        if (!$passwordValid) {
-            Session::setFlash('error', 'El usuario no existe o las credenciales son incorrectas');
-            return Response::redirect('/login');
-        }
-        
-        // Crear sesión de usuario
-        Session::set('user_id', $user['id']);
-        Session::set('user_name', $user['name']);
-        Session::set('user_email', $user['email']);
-        Session::set('user_role', $user['role']);
-        
-        // Si recordar sesión está marcado, crear cookie
-        if (isset($data['remember']) && $data['remember'] === '1') {
+        // Recordar usuario si se solicitó
+        if (isset($_POST['remember']) && $_POST['remember'] == '1') {
             $token = bin2hex(random_bytes(32));
-            // Guardar token en la base de datos con fecha de expiración
-            // y crear cookie con el token
+            $user->remember_token = $token;
+            $user->save();
+            
+            setcookie('remember_token', $token, time() + 60 * 60 * 24 * 30, '/', '', false, true);
         }
         
-        Session::setFlash('success', 'Has iniciado sesión correctamente');
-        return Response::redirect('/dashboard');
+        return $this->redirect('/dashboard');
     }
     
-    public function showRegister() {
-        if (Session::get('user_id')) {
-            Response::redirect('/dashboard');
-        }
-        
-        return view('auth/register');
+    /**
+     * Muestra la página de registro
+     */
+    public function showRegister()
+    {
+        return $this->view('auth/register');
     }
     
-    public function register(Request $request) {
-        $data = $request->getBody();
+    /**
+     * Procesa el registro de un nuevo usuario
+     */
+    public function register()
+    {
+        // Validar datos de entrada
+        $validator = new Validator($_POST);
+        $validator->required(['name', 'email', 'password', 'password_confirmation'])
+                  ->email('email')
+                  ->min('password', 8)
+                  ->match('password', 'password_confirmation');
         
-        // Validación básica
-        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['password_confirm'])) {
-            Session::setFlash('error', 'Por favor completa todos los campos');
-            return Response::redirect('/register');
-        }
-        
-        if ($data['password'] !== $data['password_confirm']) {
-            Session::setFlash('error', 'Las contraseñas no coinciden');
-            return Response::redirect('/register');
+        if (!$validator->isValid()) {
+            Session::flash('error', 'Por favor, complete todos los campos correctamente.');
+            Session::flash('errors', $validator->getErrors());
+            Session::flash('old', $_POST);
+            return $this->redirect('/register');
         }
         
         // Verificar si el email ya está registrado
-        $existingUser = $this->userModel->findByEmail($data['email']);
-        
-        if ($existingUser) {
-            Session::setFlash('error', 'El email ya está registrado');
-            return Response::redirect('/register');
+        if (User::findByEmail($_POST['email'])) {
+            Session::flash('error', 'El correo electrónico ya está registrado.');
+            Session::flash('old', $_POST);
+            return $this->redirect('/register');
         }
         
-        // Crear usuario
-        $userId = $this->userModel->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => 'user' // Por defecto, rol de usuario estándar
-        ]);
+        // Crear nuevo usuario
+        $user = new User();
+        $user->name = $_POST['name'];
+        $user->email = $_POST['email'];
+        $user->password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $user->role = 'user'; // Por defecto, todos los usuarios nuevos son estándar
+        $user->save();
         
-        if ($userId) {
-            Session::setFlash('success', 'Registro exitoso, ahora puedes iniciar sesión');
-            return Response::redirect('/login');
-        } else {
-            Session::setFlash('error', 'Error al registrar usuario');
-            return Response::redirect('/register');
-        }
+        // Iniciar sesión automáticamente
+        Session::set('user_id', $user->id);
+        Session::set('user_name', $user->name);
+        Session::set('user_email', $user->email);
+        Session::set('user_role', $user->role);
+        
+        Session::flash('success', '¡Registro exitoso! Bienvenido a PDF Smart Scan.');
+        return $this->redirect('/dashboard');
     }
     
-    public function showResetPassword() {
-        return view('auth/reset-password');
-    }
-    
-    public function sendResetLink(Request $request) {
-        $data = $request->getBody();
-        
-        if (empty($data['email'])) {
-            Session::setFlash('error', 'Por favor ingresa tu email');
-            return Response::redirect('/reset-password');
+    /**
+     * Cierra la sesión del usuario
+     */
+    public function logout()
+    {
+        // Eliminar cookie de "recordarme" si existe
+        if (isset($_COOKIE['remember_token'])) {
+            $user = User::find(Session::get('user_id'));
+            if ($user) {
+                $user->remember_token = null;
+                $user->save();
+            }
+            
+            setcookie('remember_token', '', time() - 3600, '/', '', false, true);
         }
         
-        $user = $this->userModel->findByEmail($data['email']);
+        // Destruir sesión
+        Session::destroy();
         
+        return $this->redirect('/login');
+    }
+    
+    /**
+     * Muestra la página de recuperación de contraseña
+     */
+    public function showForgotPassword()
+    {
+        return $this->view('auth/forgot-password');
+    }
+    
+    /**
+     * Procesa la solicitud de recuperación de contraseña
+     */
+    public function forgotPassword()
+    {
+        // Validar email
+        $validator = new Validator($_POST);
+        $validator->required(['email'])
+                  ->email('email');
+        
+        if (!$validator->isValid()) {
+            Session::flash('error', 'Por favor, ingrese un correo electrónico válido.');
+            Session::flash('old', $_POST);
+            return $this->redirect('/forgot-password');
+        }
+        
+        // Buscar usuario
+        $user = User::findByEmail($_POST['email']);
+        
+        // Siempre mostrar mensaje de éxito para evitar enumerar usuarios
         if ($user) {
-            // Generar token de restablecimiento
+            // Generar token de recuperación
             $token = bin2hex(random_bytes(32));
             
-            // Guardar token en la base de datos con fecha de expiración (24 horas)
-            $expiration = date('Y-m-d H:i:s', time() + 86400); // 24 horas desde ahora
+            // Guardar token en la base de datos
+            $this->db->query(
+                "INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW())",
+                [$user->email, $token]
+            );
             
-            // Eliminar tokens anteriores de este usuario
-            $this->userModel->deletePasswordResetTokens($user['email']);
+            // Enviar correo con enlace de recuperación
+            $resetUrl = $_SERVER['HTTP_HOST'] . "/reset-password/{$token}";
+            $subject = "Recuperación de contraseña - PDF Smart Scan";
+            $message = "Hola {$user->name},\n\n";
+            $message .= "Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:\n\n";
+            $message .= "http://{$resetUrl}\n\n";
+            $message .= "Si no solicitaste este cambio, puedes ignorar este correo.\n\n";
+            $message .= "Saludos,\nEquipo de PDF Smart Scan";
             
-            // Guardar el nuevo token
-            $this->userModel->savePasswordResetToken($user['email'], $token, $expiration);
-            
-            // Enviar email con enlace de restablecimiento
-            $resetUrl = $_ENV['APP_URL'] . '/reset-password/verify?token=' . $token . '&email=' . urlencode($user['email']);
-            
-            // Construir el mensaje de correo
-            $subject = 'Restablecer contraseña - Sistema PDF a Excel';
-            $message = "Hola {$user['name']},\n\n";
-            $message .= "Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace o cópialo en tu navegador:\n\n";
-            $message .= "{$resetUrl}\n\n";
-            $message .= "Este enlace expirará en 24 horas.\n\n";
-            $message .= "Si no solicitaste restablecer tu contraseña, puedes ignorar este mensaje.\n\n";
-            $message .= "Saludos,\nEquipo Tema Litoclean";
-            
-            // Configurar cabeceras
-            $headers = "From: no-reply@temalitoclean.pe\r\n";
-            $headers .= "Reply-To: soporte@temalitoclean.pe\r\n";
-            $headers .= "X-Mailer: PHP/" . phpversion();
-            
-            // Enviar el correo
-            mail($user['email'], $subject, $message, $headers);
-            
-            // Registrar el intento de restablecimiento en logs
-            error_log("Solicitud de restablecimiento de contraseña para {$user['email']} enviada. Token: {$token}");
+            Mailer::send($user->email, $subject, $message);
         }
         
-        // Siempre mostrar mensaje de éxito para evitar enumerar emails
-        Session::setFlash('success', 'Si tu email está registrado, recibirás un enlace para restablecer tu contraseña');
-        return Response::redirect('/login');
+        Session::flash('success', 'Si el correo existe en nuestra base de datos, recibirás instrucciones para restablecer tu contraseña.');
+        return $this->redirect('/login');
     }
     
-    public function logout() {
-        Session::destroy();
-        return Response::redirect('/login');
-    }
-
     /**
-     * Muestra la vista para restablecer la contraseña con un token
+     * Muestra la página de restablecimiento de contraseña
      */
-    public function verifyResetToken(Request $request) {
-        $token = $request->getQueryParam('token');
-        $email = $request->getQueryParam('email');
-        
-        if (empty($token) || empty($email)) {
-            Session::setFlash('error', 'Enlace de restablecimiento no válido');
-            return Response::redirect('/login');
-        }
-        
+    public function showResetPassword($token)
+    {
         // Verificar si el token es válido
-        if (!$this->userModel->verifyPasswordResetToken($email, $token)) {
-            Session::setFlash('error', 'El enlace de restablecimiento ha expirado o no es válido');
-            return Response::redirect('/login');
+        $reset = $this->db->query(
+            "SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+            [$token]
+        )->fetch();
+        
+        if (!$reset) {
+            Session::flash('error', 'El enlace de recuperación es inválido o ha expirado.');
+            return $this->redirect('/login');
         }
         
-        // Mostrar formulario para nueva contraseña
-        return view('auth/reset-password', [
-            'token' => $token,
-            'email' => $email
-        ]);
+        return $this->view('auth/reset-password', ['token' => $token]);
     }
-
+    
     /**
-     * Actualiza la contraseña del usuario después de verificar el token
+     * Procesa el restablecimiento de contraseña
      */
-    public function updatePassword(Request $request) {
-        $data = $request->getBody();
-        
+    public function resetPassword()
+    {
         // Validar datos
-        if (empty($data['token']) || empty($data['email']) || 
-            empty($data['new_password']) || empty($data['new_password_confirm'])) {
-            Session::setFlash('error', 'Por favor completa todos los campos');
-            return Response::redirect('/reset-password');
-        }
+        $validator = new Validator($_POST);
+        $validator->required(['token', 'password', 'password_confirmation'])
+                  ->min('password', 8)
+                  ->match('password', 'password_confirmation');
         
-        if ($data['new_password'] !== $data['new_password_confirm']) {
-            Session::setFlash('error', 'Las contraseñas no coinciden');
-            return Response::redirect('/reset-password/verify?token=' . $data['token'] . '&email=' . urlencode($data['email']));
+        if (!$validator->isValid()) {
+            Session::flash('error', 'Por favor, complete todos los campos correctamente.');
+            Session::flash('errors', $validator->getErrors());
+            return $this->redirect('/reset-password/' . $_POST['token']);
         }
         
         // Verificar token
-        if (!$this->userModel->verifyPasswordResetToken($data['email'], $data['token'])) {
-            Session::setFlash('error', 'El enlace de restablecimiento ha expirado o no es válido');
-            return Response::redirect('/login');
-        }
+        $reset = $this->db->query(
+            "SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+            [$_POST['token']]
+        )->fetch();
         
-        // Obtener usuario
-        $user = $this->userModel->findByEmail($data['email']);
-        
-        if (!$user) {
-            Session::setFlash('error', 'Usuario no encontrado');
-            return Response::redirect('/login');
+        if (!$reset) {
+            Session::flash('error', 'El enlace de recuperación es inválido o ha expirado.');
+            return $this->redirect('/login');
         }
         
         // Actualizar contraseña
-        $result = $this->userModel->updatePassword($user['id'], $data['new_password']);
+        $user = User::findByEmail($reset['email']);
         
-        if ($result) {
-            // Eliminar tokens usados
-            $this->userModel->deletePasswordResetTokens($data['email']);
+        if ($user) {
+            $user->password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $user->save();
             
-            Session::setFlash('success', 'Contraseña actualizada correctamente. Ahora puedes iniciar sesión.');
-            return Response::redirect('/login');
+            // Eliminar token usado
+            $this->db->query("DELETE FROM password_resets WHERE email = ?", [$reset['email']]);
+            
+            Session::flash('success', 'Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.');
         } else {
-            Session::setFlash('error', 'Error al actualizar la contraseña. Por favor intenta nuevamente.');
-            return Response::redirect('/reset-password/verify?token=' . $data['token'] . '&email=' . urlencode($data['email']));
+            Session::flash('error', 'No se pudo encontrar el usuario asociado a este token.');
         }
+        
+        return $this->redirect('/login');
     }
 }

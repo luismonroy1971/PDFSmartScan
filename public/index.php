@@ -481,7 +481,7 @@ return [
     "driver" => "mysql",
     "host" => "' . ($_ENV["DB_HOST"] ?? "localhost") . '",
     "port" => "' . ($_ENV["DB_PORT"] ?? "3306") . '",
-    "database" => "' . ($_ENV["DB_DATABASE"] ?? "pdfsmartScan") . '",
+    "database" => "' . ($_ENV["DB_DATABASE"] ?? "pdf_extract") . '",
     "username" => "' . ($_ENV["DB_USERNAME"] ?? "root") . '",
     "password" => "' . ($_ENV["DB_PASSWORD"] ?? "") . '",
     "charset" => "utf8mb4",
@@ -553,26 +553,5 @@ $router->get('/test', 'TestController@index');
 $request = new Request();
 $response = new Response();
 
-
-// Depuración directa para la ruta /login
-if ($_SERVER['REQUEST_URI'] === '/login') {
-    echo "<!-- Interceptando la ruta /login para depuración -->";
-    try {
-        // Crear instancia del controlador manualmente
-        $controller = new \App\Controllers\AuthController();
-        
-        // Llamar al método showLogin
-        $result = $controller->showLogin();
-        
-        // Mostrar el resultado
-        echo $result;
-        exit;
-    } catch (\Exception $e) {
-        echo '<h1>Error en depuración:</h1>';
-        echo '<p>' . $e->getMessage() . '</p>';
-        echo '<pre>' . $e->getTraceAsString() . '</pre>';
-        exit;
-    }
-}
 // Ejecutar la aplicación
 $app->run($router, $request, $response);
