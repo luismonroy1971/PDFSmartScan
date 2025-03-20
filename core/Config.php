@@ -8,6 +8,36 @@ namespace Core;
  */
 class Config {
     /**
+     * Carga variables de entorno desde .env
+     */
+    private static function loadEnv() {
+        $envFile = ROOT_PATH . '/.env';
+        
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            
+            foreach ($lines as $line) {
+                // Ignorar comentarios
+                if (strpos(trim($line), '#') === 0) {
+                    continue;
+                }
+                
+                list($name, $value) = explode('=', $line, 2);
+                $name = trim($name);
+                $value = trim($value);
+                
+                // Eliminar comillas si existen
+                if (strpos($value, '"') === 0 && strrpos($value, '"') === strlen($value) - 1) {
+                    $value = substr($value, 1, -1);
+                }
+                
+                putenv("$name=$value");
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+    /**
      * Almacena todos los valores de configuración
      * 
      * @var array
@@ -22,6 +52,8 @@ class Config {
      * @return void
      */
     public static function load($file, $namespace = 'app') {
+        // Cargar variables de entorno desde .env
+        self::loadEnv();
         if (file_exists($file)) {
             $config = require $file;
             

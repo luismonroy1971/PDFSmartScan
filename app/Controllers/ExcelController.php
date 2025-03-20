@@ -3,7 +3,7 @@ namespace App\Controllers;
 
 use App\Models\Document;
 use App\Models\DocumentArea;
-use Core\Session;
+use App\Core\Session;
 use Core\Request;
 use Core\Response;
 use App\Controllers\OcrController;

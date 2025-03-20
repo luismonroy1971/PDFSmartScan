@@ -170,4 +170,75 @@ class ExcelService
             
             $sheet->getStyle($headerRange)->applyFromArray([
                 'font' => [
-                    '
+                    'bold' => true,
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E2EFDA'],
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000'],
+                    ],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+            
+            // Aplicar estilo a los valores
+            $valueRange = 'B1:B' . $lastRow;
+            $sheet->getStyle($valueRange)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000'],
+                    ],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+        }
+    }
+    
+    /**
+     * Convierte un número de columna en letra de columna (ej: 1 = A, 27 = AA)
+     * 
+     * @param int $columnNumber Número de columna (1-based)
+     * @return string Letra de columna
+     */
+    private function getColumnLetter($columnNumber) 
+    {
+        $columnLetter = '';
+        
+        while ($columnNumber > 0) {
+            $modulo = ($columnNumber - 1) % 26;
+            $columnLetter = chr(65 + $modulo) . $columnLetter;
+            $columnNumber = (int)(($columnNumber - $modulo) / 26);
+        }
+        
+        return $columnLetter;
+    }
+    
+    /**
+     * Ajustar anchos de columna si está habilitado
+     * 
+     * @param PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet Hoja de cálculo
+     */
+    private function autoAdjustColumnWidths($sheet)
+    {
+        // Obtener el rango de celdas utilizadas
+        $highestColumn = $sheet->getHighestColumn();
+        $highestColumnIndex = 
+            \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+        
+        // Ajustar el ancho de cada columna basado en su contenido
+        for ($column = 1; $column <= $highestColumnIndex; $column++) {
+            $sheet->getColumnDimension($this->getColumnLetter($column))->setAutoSize(true);
+        }
+    }
+}

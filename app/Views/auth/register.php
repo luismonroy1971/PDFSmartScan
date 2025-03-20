@@ -1,5 +1,5 @@
 <?php 
-use Core\Session;
+use App\Core\Session;
 include_once VIEWS_PATH . '/layouts/header.php'; 
 ?>
 <div class="container mt-5">

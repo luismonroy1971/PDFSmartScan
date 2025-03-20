@@ -12,12 +12,21 @@ define('APP_PATH', BASE_PATH . '/app');
 define('CORE_PATH', BASE_PATH . '/core');
 define('VIEWS_PATH', APP_PATH . '/Views');
 define('UPLOAD_PATH', BASE_PATH . '/public/uploads');
+define('STORAGE_PATH', BASE_PATH . '/storage');
+define('CONFIG_PATH', BASE_PATH . '/config');
+define('ROOT_PATH', BASE_PATH);
+
+// Definir la URL base para enlaces y redirecciones
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+define('BASE_URL', $protocol . $host);
 
 // Cargar Composer autoloader
 require_once BASE_PATH . '/vendor/autoload.php';
 
-// Cargar helpers
+// Cargar helpers y utilidades
 require_once CORE_PATH . '/helpers.php';
+require_once CORE_PATH . '/Utils.php';
 
 // Cargar variables de entorno
 $dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
@@ -67,8 +76,7 @@ if (!is_dir(VIEWS_PATH . '/errors')) {
 
 // Crear vistas predeterminadas si no existen
 if (!file_exists(VIEWS_PATH . '/auth/login.php')) {
-    file_put_contents(VIEWS_PATH . '/auth/login.php', '<?php use Core\Session; ?>
-<div class="container mt-5">
+    file_put_contents(VIEWS_PATH . '/auth/login.php', '<?php use App\Core\Session; ?>\n<div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">

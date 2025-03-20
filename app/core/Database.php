@@ -90,4 +90,16 @@ class Database
     {
         return $this->pdo->lastInsertId();
     }
+    
+    /**
+     * Prepara una consulta SQL
+     */
+    public function prepare($sql)
+    {
+        try {
+            return $this->pdo->prepare($sql);
+        } catch (\PDOException $e) {
+            throw new \Exception('Error al preparar la consulta: ' . $e->getMessage());
+        }
+    }
 }

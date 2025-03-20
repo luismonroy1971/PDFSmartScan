@@ -629,3 +629,5 @@ $(document).ready(function() {
         if (currentSelection) {
             selectionLayer.removeChild(currentSelection);
         }
+    }
+})

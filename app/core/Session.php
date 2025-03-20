@@ -99,6 +99,15 @@ class Session
     }
     
     /**
+     * Establece un mensaje flash (disponible solo para la siguiente solicitud)
+     * Alias de flash() para mantener compatibilidad con el código existente
+     */
+    public static function setFlash($key, $value)
+    {
+        self::flash($key, $value);
+    }
+    
+    /**
      * Obtiene un mensaje flash y lo elimina
      */
     public static function getFlash($key, $default = null)

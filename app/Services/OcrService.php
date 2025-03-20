@@ -256,4 +256,29 @@ class OcrService
             'deskew' => false
         ];
         
-        $options = array_
+        $options = array_merge($defaultOptions, $options);
+        
+        // Implementación del preprocesamiento
+        // ...
+        
+        return $imagePath; // Devolver la misma imagen si no hay preprocesamiento
+    }
+    
+    /**
+     * Procesa OCR en la imagen
+     * 
+     * @param string $imagePath Ruta a la imagen
+     * @return string Texto extraído
+     */
+    public function processImage($imagePath)
+    {
+        // Verificar si existe la imagen
+        if (!file_exists($imagePath)) {
+            throw new Exception("Imagen no encontrada: {$imagePath}");
+        }
+        
+        $text = $this->extractTextFromImage($imagePath);
+        
+        return $text;
+    }
+}

@@ -123,6 +123,24 @@ class MailService
     }
     
     /**
+     * Ejecuta el envío de un correo electrónico
+     * 
+     * Este método es un alias de send() para mantener compatibilidad con código existente
+     * 
+     * @param string|array $to Destinatario o array de destinatarios
+     * @param string $subject Asunto del correo
+     * @param string $body Cuerpo del correo
+     * @param array $attachments Array de archivos adjuntos (opcional)
+     * @param array $cc Array de destinatarios en copia (opcional)
+     * @param array $bcc Array de destinatarios en copia oculta (opcional)
+     * @return bool Éxito o fracaso del envío
+     */
+    public function execute($to, $subject, $body, $attachments = [], $cc = [], $bcc = [])
+    {
+        return $this->send($to, $subject, $body, $attachments, $cc, $bcc);
+    }
+    
+    /**
      * Envía un correo electrónico con plantilla
      * 
      * @param string|array $to Destinatario o array de destinatarios

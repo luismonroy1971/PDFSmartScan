@@ -11,7 +11,7 @@ use App\Models\TemplateArea;
 use App\Models\Document;
 use App\Models\DocumentArea;
 
-class TemplateController extends Controller
+class TemplateController extends BaseController
 {
     /**
      * Constructor

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Core\Session;
 use App\Core\Validator;
 use App\Core\Mailer;
+use Core\Database;
 
 class AuthController extends BaseController
 {
@@ -79,7 +80,7 @@ class AuthController extends BaseController
         $validator->required(['name', 'email', 'password', 'password_confirmation'])
                   ->email('email')
                   ->min('password', 8)
-                  ->match('password', 'password_confirmation');
+                  ->matches('password', 'password_confirmation');
         
         if (!$validator->isValid()) {
             Session::flash('error', 'Por favor, complete todos los campos correctamente.');
@@ -168,7 +169,7 @@ class AuthController extends BaseController
             $token = bin2hex(random_bytes(32));
             
             // Guardar token en la base de datos
-            $this->db->query(
+            Database::getInstance()->query(
                 "INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW())",
                 [$user->email, $token]
             );
@@ -195,7 +196,7 @@ class AuthController extends BaseController
     public function showResetPassword($token)
     {
         // Verificar si el token es válido
-        $reset = $this->db->query(
+        $reset = Database::getInstance()->query(
             "SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
             [$token]
         )->fetch();
@@ -217,7 +218,7 @@ class AuthController extends BaseController
         $validator = new Validator($_POST);
         $validator->required(['token', 'password', 'password_confirmation'])
                   ->min('password', 8)
-                  ->match('password', 'password_confirmation');
+                  ->matches('password', 'password_confirmation');
         
         if (!$validator->isValid()) {
             Session::flash('error', 'Por favor, complete todos los campos correctamente.');
@@ -226,7 +227,7 @@ class AuthController extends BaseController
         }
         
         // Verificar token
-        $reset = $this->db->query(
+        $reset = Database::getInstance()->query(
             "SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
             [$_POST['token']]
         )->fetch();
@@ -244,7 +245,7 @@ class AuthController extends BaseController
             $user->save();
             
             // Eliminar token usado
-            $this->db->query("DELETE FROM password_resets WHERE email = ?", [$reset['email']]);
+            Database::getInstance()->query("DELETE FROM password_resets WHERE email = ?", [$reset['email']]);
             
             Session::flash('success', 'Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.');
         } else {

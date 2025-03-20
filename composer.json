@@ -8,7 +8,8 @@
         "setasign/fpdi": "^2.3",
         "phpoffice/phpspreadsheet": "^4.1",
         "thiagoalessio/tesseract_ocr": "^2.12",
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.5",
+        "phpmailer/phpmailer": "^6.8"
     },
     "autoload": {
         "psr-4": {

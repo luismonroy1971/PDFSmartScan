@@ -12,7 +12,7 @@ use App\Models\TemplateArea;
 use App\Services\OcrService;
 use App\Services\ExcelService;
 
-class PdfController extends Controller
+class PdfController extends BaseController
 {
     protected $ocrService;
     protected $excelService;

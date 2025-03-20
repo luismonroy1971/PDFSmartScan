@@ -2,7 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\Document;
-use Core\Session;
+use App\Core\Session;
 use Core\Request;
 use Core\Response;
 use function Core\view;

@@ -197,4 +197,36 @@ class DocumentArea
         $area->width = $data['width'];
         $area->height = $data['height'];
         $area->page_number = $data['page_number'];
-        $area->created_at = $data['created_at
+        $area->created_at = $data['created_at'];
+        $area->updated_at = $data['updated_at'];
+        
+        return $area;
+    }
+    
+    /**
+     * Alias de findByDocumentId para mantener consistencia con otros modelos
+     * 
+     * @param int $documentId ID del documento
+     * @return array Áreas encontradas
+     */
+    public static function findAllByDocument($documentId)
+    {
+        return self::findByDocumentId($documentId);
+    }
+    
+    /**
+     * Obtiene las coordenadas del área para extracción de imagen
+     * 
+     * @return array Coordenadas del área
+     */
+    public function getCoordinates()
+    {
+        return [
+            'x' => $this->x_pos,
+            'y' => $this->y_pos,
+            'width' => $this->width,
+            'height' => $this->height,
+            'page' => $this->page_number
+        ];
+    }
+}

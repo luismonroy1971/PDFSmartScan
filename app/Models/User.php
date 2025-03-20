@@ -214,6 +214,77 @@ class User
     }
     
     /**
+     * Busca un usuario por su ID (alias de find)
+     * 
+     * @param int $id ID del usuario
+     * @return User|null Usuario encontrado o null
+     */
+    public static function findById($id)
+    {
+        return self::find($id);
+    }
+    
+    /**
+     * Actualiza un usuario existente (método de instancia)
+     * 
+     * @param array $data Datos a actualizar
+     * @return bool Éxito o fracaso de la operación
+     */
+    public function update($data)
+    {
+        if (!isset($this->id)) {
+            return false;
+        }
+        
+        // Actualizar propiedades con los datos proporcionados
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+        
+        // Si se proporciona una nueva contraseña, hashearla
+        if (isset($data['password']) && !empty($data['password'])) {
+            $this->password = self::hashPassword($data['password']);
+        }
+        
+        // Guardar los cambios
+        return $this->save();
+    }
+    
+    /**
+     * Actualiza un usuario existente por su ID (método estático)
+     * 
+     * @param int $id ID del usuario a actualizar
+     * @param array $data Datos a actualizar
+     * @return bool Éxito o fracaso de la operación
+     */
+    public static function updateById($id, $data)
+    {
+        // Buscar el usuario por su ID
+        $user = self::find($id);
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Actualizar propiedades con los datos proporcionados
+        foreach ($data as $key => $value) {
+            if (property_exists($user, $key)) {
+                $user->$key = $value;
+            }
+        }
+        
+        // Si se proporciona una nueva contraseña, hashearla
+        if (isset($data['password']) && !empty($data['password'])) {
+            $user->password = self::hashPassword($data['password']);
+        }
+        
+        // Guardar los cambios
+        return $user->save();
+    }
+    
+    /**
      * Crea una instancia de User a partir de un array
      */
     private static function createFromArray($data)

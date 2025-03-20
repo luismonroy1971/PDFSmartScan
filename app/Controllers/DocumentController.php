@@ -121,6 +121,7 @@ class DocumentController extends BaseController
         $pdfService = new PdfService();
         $pdfInfo = $pdfService->getDocumentInfo($document->file_path);
         
+        // Retornar la vista con los datos
         return $this->view('documents/view', [
             'document' => $document,
             'areas' => $areas,
@@ -197,7 +198,7 @@ class DocumentController extends BaseController
         $userId = Session::get('user_id');
         $area = DocumentArea::find($id);
         
-        // Verificar si el área existe y pertenece a un documento del usuario
+        // Verificar si el área existe y pertenece a un documento
         if (!$area) {
             return Response::json([
                 'success' => false,
@@ -354,4 +355,157 @@ class DocumentController extends BaseController
         }
         
         // Descargar archivo
-        return Response::download($excelPath, pathinfo($
+        return Response::download($excelPath, pathinfo($document->original_filename, PATHINFO_FILENAME) . '.xlsx');
+    }
+    
+    /**
+     * Muestra el formulario para editar un documento
+     */
+    public function edit($id)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($id);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            Session::flash('error', 'Documento no encontrado o no tiene permisos para acceder.');
+            return $this->redirect('/documents');
+        }
+        
+        return $this->view('documents/edit', [
+            'document' => $document
+        ]);
+    }
+    
+    /**
+     * Actualiza un documento existente
+     */
+    public function update($id)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($id);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            Session::flash('error', 'Documento no encontrado o no tiene permisos para acceder.');
+            return $this->redirect('/documents');
+        }
+        
+        // Verificar si se ha subido un nuevo archivo
+        if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['pdf_file'];
+            
+            // Validar el archivo
+            $validator = new Validator([
+                'file' => $file
+            ]);
+            
+            // Validar tipo MIME y extensión
+            $allowedMimes = ['application/pdf'];
+            $allowedExtensions = ['pdf'];
+            $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            
+            if (!in_array($file['type'], $allowedMimes) || !in_array($fileExtension, $allowedExtensions)) {
+                Session::flash('error', 'El archivo debe ser un PDF válido.');
+                return $this->redirect('/documents/edit/' . $id);
+            }
+            
+            // Validar tamaño (máximo 10MB)
+            $maxSize = 10 * 1024 * 1024; // 10MB en bytes
+            if ($file['size'] > $maxSize) {
+                Session::flash('error', 'El archivo no debe superar los 10MB.');
+                return $this->redirect('/documents/edit/' . $id);
+            }
+            
+            // Eliminar archivo anterior
+            $oldFilePath = APP_PATH . '/public/' . $document->file_path;
+            if (file_exists($oldFilePath)) {
+                @unlink($oldFilePath);
+            }
+            
+            // Generar nombre único para el nuevo archivo
+            $filename = uniqid('doc_') . '.pdf';
+            $uploadDir = UPLOAD_PATH . '/' . $userId;
+            $filePath = $uploadDir . '/' . $filename;
+            
+            // Crear directorio si no existe
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            // Mover el archivo subido
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                Session::flash('error', 'Error al guardar el archivo. Por favor, inténtelo de nuevo.');
+                return $this->redirect('/documents/edit/' . $id);
+            }
+            
+            // Actualizar información del documento
+            $document->filename = $filename;
+            $document->original_filename = $file['name'];
+            $document->file_size = $file['size'];
+            $document->file_path = $filePath;
+        }
+        
+        // Actualizar otros campos si es necesario (por ejemplo, etiquetas o categorías)
+        if (isset($_POST['tags'])) {
+            $this->updateTag($document->id, $_POST['tags']);
+        }
+        
+        // Guardar cambios
+        if ($document->save()) {
+            Session::flash('success', 'Documento actualizado correctamente.');
+            return $this->redirect('/documents/view/' . $document->id);
+        } else {
+            Session::flash('error', 'Error al actualizar el documento.');
+            return $this->redirect('/documents/edit/' . $id);
+        }
+    }
+    
+    /**
+     * Actualiza las etiquetas de un documento
+     * 
+     * @param int $documentId ID del documento
+     * @param string $tags Etiquetas separadas por comas
+     * @return bool Éxito o fracaso de la operación
+     */
+    public function updateTag($documentId, $tags)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($documentId);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            return false;
+        }
+        
+        // Aquí se implementaría la lógica para guardar las etiquetas
+        // Por ahora, como no existe un campo tags en la tabla documents,
+        // simplemente retornamos true para evitar errores
+        return true;
+    }
+    
+    /**
+     * Elimina un documento
+     */
+    public function delete($id)
+    {
+        $userId = Session::get('user_id');
+        $document = Document::find($id);
+        
+        // Verificar si el documento existe y pertenece al usuario
+        if (!$document || $document->user_id != $userId) {
+            Session::flash('error', 'Documento no encontrado o no tiene permisos para acceder.');
+            return $this->redirect('/documents');
+        }
+        
+        // Eliminar documento (esto también eliminará el archivo físico y las áreas asociadas)
+        if ($document->delete()) {
+            Session::flash('success', 'Documento eliminado correctamente.');
+        } else {
+            Session::flash('error', 'Error al eliminar el documento.');
+        }
+        
+        return $this->redirect('/documents');
+    }
+
+}

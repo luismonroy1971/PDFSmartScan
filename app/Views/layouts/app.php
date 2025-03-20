@@ -1,5 +1,5 @@
 <?php 
-use Core\Session;
+use App\Core\Session;
 ?>
 <!DOCTYPE html>
 <html lang="es">
